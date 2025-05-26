@@ -25,6 +25,8 @@ const ExcelUploadTable = () => {
   const [selectedLocation, setSelectedLocation] = useState(null);
   const [showProgress, setShowProgress] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [currentStation, setCurrentStation] = useState("");
+
 
   const handleFileUpload = (event) => {
     const file = event.target.files[0];
@@ -117,10 +119,13 @@ const ExcelUploadTable = () => {
       const row = tableData[i];
       const url = `https://power.larc.nasa.gov/api/temporal/daily/point?parameters=ALLSKY_SFC_SW_DWN&community=RE&latitude=${row.latitude}&longitude=${row.longitude}&start=${start}&end=${end}&format=JSON`;
 
+      setCurrentStation(row.baseStation);
+
       try {
         const res = await fetch(url);
         const json = await res.json();
         const dailyData = json.properties?.parameter?.ALLSKY_SFC_SW_DWN || {};
+
         results.push({
           baseStation: row.baseStation,
           state: row.state,
@@ -128,6 +133,7 @@ const ExcelUploadTable = () => {
           longitude: row.longitude,
           ...dailyData
         });
+        
       } catch (err) {
         results.push({
           baseStation: row.baseStation,
@@ -139,7 +145,7 @@ const ExcelUploadTable = () => {
       }
 
       setProgress(Math.round(((i + 1) / tableData.length) * 100));
-      await new Promise((resolve) => setTimeout(resolve, 800));
+      await new Promise((resolve) => setTimeout(resolve, 5));
     }
 
     const worksheet = XLSX.utils.json_to_sheet(results);
@@ -195,10 +201,10 @@ const ExcelUploadTable = () => {
           <table className="styled-table">
             <thead>
               <tr>
-                <th onClick={() => handleSort('baseStation')}>Base Station</th>
-                <th onClick={() => handleSort('state')}>State</th>
-                <th onClick={() => handleSort('latitude')}>Latitude</th>
-                <th onClick={() => handleSort('longitude')}>Longitude</th>
+                <th onClick={() => handleSort("baseStation")}>Base Station</th>
+                <th onClick={() => handleSort("state")}>State</th>
+                <th onClick={() => handleSort("latitude")}>Latitude</th>
+                <th onClick={() => handleSort("longitude")}>Longitude</th>
               </tr>
             </thead>
             <tbody>
@@ -246,7 +252,10 @@ const ExcelUploadTable = () => {
       {showProgress && (
         <div className="modal-backdrop">
           <div className="modal-content">
-            <h3>Fetching NASA API data...</h3>
+            <h3>Requesting NASA Information...</h3>
+            <p>
+              <strong>Base Station:</strong> {currentStation} ...
+            </p>
             <div className="progress-bar">
               <div
                 className="progress-bar-fill"
@@ -270,12 +279,12 @@ const ExcelUploadTable = () => {
             </h3>
             <MapContainer
               center={[selectedLocation.lat, selectedLocation.lng]}
-              zoom={13}
-              style={{ height: '400px', width: '100%', borderRadius: '8px' }}
+              zoom={6}
+              style={{ height: "400px", width: "100%", borderRadius: "8px" }}
             >
               <TileLayer
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                attribution="&copy; OpenStreetMap contributors"
+                attribution=""
               />
               <Marker position={[selectedLocation.lat, selectedLocation.lng]}>
                 <Popup>
