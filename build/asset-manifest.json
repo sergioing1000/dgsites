@@ -1,0 +1,16 @@
+{
+  "files": {
+    "main.css": "/static/css/main.978b2c72.css",
+    "main.js": "/static/js/main.a366fd6d.js",
+    "static/js/453.d7aebfb7.chunk.js": "/static/js/453.d7aebfb7.chunk.js",
+    "static/media/nasapower.jpeg": "/static/media/nasapower.8a0733b54ee4f6fe8311.jpeg",
+    "index.html": "/index.html",
+    "main.978b2c72.css.map": "/static/css/main.978b2c72.css.map",
+    "main.a366fd6d.js.map": "/static/js/main.a366fd6d.js.map",
+    "453.d7aebfb7.chunk.js.map": "/static/js/453.d7aebfb7.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.978b2c72.css",
+    "static/js/main.a366fd6d.js"
+  ]
+}
