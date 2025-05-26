@@ -9,8 +9,8 @@ const Header = () => {
   return (
     <header className="header">
       <div className="brand">
-        <a target="_blank" href="https://power.larc.nasa.gov/">
-          <img src={nasalogo} alt="nasa power logo"  width={100}/>
+        <a target="_blank" rel="noreferrer" href="https://power.larc.nasa.gov/">
+          <img src={nasalogo} alt="nasa power logo" width={100} />
         </a>
 
         <a href="/" className="brand-link">
@@ -19,10 +19,10 @@ const Header = () => {
       </div>
 
       <nav className={`nav-links ${isMenuOpen ? "active" : ""}`}>
-        <a to="/">Home</a>
-        <a to="/about">About</a>
-        <a to="/dashboard">Dashboard</a>
-        <a to="/contact">Contact</a>
+        <a href="/">Home</a>
+        <a href="/about">About</a>
+        <a href="/dashboard">Dashboard</a>
+        <a href="/contact">Contact</a>
       </nav>
 
       <button className="menu-toggle" onClick={toggleMenu}>
