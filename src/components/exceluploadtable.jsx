@@ -1,28 +1,30 @@
-import React, { useState, useMemo } from "react";
-import * as XLSX from "xlsx";
-import "./ExcelUploadTable.css";
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
-import L from "leaflet";
+import React, { useState, useMemo } from 'react';
+import * as XLSX from 'xlsx';
+import { saveAs } from 'file-saver';
+import './ExcelUploadTable.css';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import L from 'leaflet';
 
-// Fix default marker icon path in Leaflet
-import "leaflet/dist/leaflet.css";
+import 'leaflet/dist/leaflet.css';
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl:
-    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
+    'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
   iconUrl:
-    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
+    'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
   shadowUrl:
-    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
+    'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
 const ExcelUploadTable = () => {
   const [tableData, setTableData] = useState([]);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [sortConfig, setSortConfig] = useState({ key: "", direction: "" });
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortConfig, setSortConfig] = useState({ key: '', direction: '' });
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedLocation, setSelectedLocation] = useState(null);
+  const [showProgress, setShowProgress] = useState(false);
+  const [progress, setProgress] = useState(0);
 
   const handleFileUpload = (event) => {
     const file = event.target.files[0];
@@ -31,7 +33,7 @@ const ExcelUploadTable = () => {
     const reader = new FileReader();
     reader.onload = (e) => {
       const data = new Uint8Array(e.target.result);
-      const workbook = XLSX.read(data, { type: "array" });
+      const workbook = XLSX.read(data, { type: 'array' });
 
       const sheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[sheetName];
@@ -40,10 +42,10 @@ const ExcelUploadTable = () => {
       const [, ...rows] = jsonData;
 
       const parsedData = rows.map((row) => ({
-        baseStation: row[1] || "",
-        state: row[2] || "",
-        latitude: row[3] || "",
-        longitude: row[4] || "",
+        baseStation: row[1] || '',
+        state: row[2] || '',
+        latitude: row[3] || '',
+        longitude: row[4] || '',
       }));
 
       setTableData(parsedData);
@@ -54,9 +56,9 @@ const ExcelUploadTable = () => {
   };
 
   const handleSort = (key) => {
-    let direction = "asc";
-    if (sortConfig.key === key && sortConfig.direction === "asc") {
-      direction = "desc";
+    let direction = 'asc';
+    if (sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
     }
     setSortConfig({ key, direction });
   };
@@ -75,7 +77,7 @@ const ExcelUploadTable = () => {
     return [...filteredData].sort((a, b) => {
       const valA = String(a[sortConfig.key]);
       const valB = String(b[sortConfig.key]);
-      return sortConfig.direction === "asc"
+      return sortConfig.direction === 'asc'
         ? valA.localeCompare(valB)
         : valB.localeCompare(valA);
     });
@@ -97,6 +99,61 @@ const ExcelUploadTable = () => {
   };
 
   const closeModal = () => setSelectedLocation(null);
+
+  const fetchAPI = async () => {
+    const start = new Date(Date.now() - 1125 * 24 * 60 * 60 * 1000)
+      .toISOString()
+      .slice(0, 10)
+      .replace(/-/g, '');
+    const end = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+      .toISOString()
+      .slice(0, 10)
+      .replace(/-/g, '');
+
+    setShowProgress(true);
+    const results = [];
+
+    for (let i = 0; i < tableData.length; i++) {
+      const row = tableData[i];
+      const url = `https://power.larc.nasa.gov/api/temporal/daily/point?parameters=ALLSKY_SFC_SW_DWN&community=RE&latitude=${row.latitude}&longitude=${row.longitude}&start=${start}&end=${end}&format=JSON`;
+
+      try {
+        const res = await fetch(url);
+        const json = await res.json();
+        const dailyData = json.properties?.parameter?.ALLSKY_SFC_SW_DWN || {};
+        results.push({
+          baseStation: row.baseStation,
+          state: row.state,
+          latitude: row.latitude,
+          longitude: row.longitude,
+          ...dailyData
+        });
+      } catch (err) {
+        results.push({
+          baseStation: row.baseStation,
+          state: row.state,
+          latitude: row.latitude,
+          longitude: row.longitude,
+          error: 'Fetch failed'
+        });
+      }
+
+      setProgress(Math.round(((i + 1) / tableData.length) * 100));
+      await new Promise((resolve) => setTimeout(resolve, 800));
+    }
+
+    const worksheet = XLSX.utils.json_to_sheet(results);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Results');
+    const excelBuffer = XLSX.write(workbook, {
+      bookType: 'xlsx',
+      type: 'array'
+    });
+    const blob = new Blob([excelBuffer], { type: 'application/octet-stream' });
+    saveAs(blob, 'results.xlsx');
+
+    setShowProgress(false);
+  };
 
   return (
     <div className="excel-upload-container">
@@ -138,10 +195,10 @@ const ExcelUploadTable = () => {
           <table className="styled-table">
             <thead>
               <tr>
-                <th onClick={() => handleSort("baseStation")}>Base Station</th>
-                <th onClick={() => handleSort("state")}>State</th>
-                <th onClick={() => handleSort("latitude")}>Latitude</th>
-                <th onClick={() => handleSort("longitude")}>Longitude</th>
+                <th onClick={() => handleSort('baseStation')}>Base Station</th>
+                <th onClick={() => handleSort('state')}>State</th>
+                <th onClick={() => handleSort('latitude')}>Latitude</th>
+                <th onClick={() => handleSort('longitude')}>Longitude</th>
               </tr>
             </thead>
             <tbody>
@@ -177,7 +234,29 @@ const ExcelUploadTable = () => {
               Next ▶
             </button>
           </div>
+
+          <div className="api-button-container">
+            <button className="api-button" onClick={fetchAPI}>
+              API
+            </button>
+          </div>
         </>
+      )}
+
+      {showProgress && (
+        <div className="modal-backdrop">
+          <div className="modal-content">
+            <h3>Fetching NASA API data...</h3>
+            <div className="progress-bar">
+              <div
+                className="progress-bar-fill"
+                style={{ width: `${progress}%` }}
+              >
+                {progress}%
+              </div>
+            </div>
+          </div>
+        </div>
       )}
 
       {selectedLocation && (
@@ -191,16 +270,17 @@ const ExcelUploadTable = () => {
             </h3>
             <MapContainer
               center={[selectedLocation.lat, selectedLocation.lng]}
-              zoom={6}
-              style={{ height: "400px", width: "100%", borderRadius: "8px" }}
+              zoom={13}
+              style={{ height: '400px', width: '100%', borderRadius: '8px' }}
             >
               <TileLayer
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                attribution="&copy;"
+                attribution="&copy; OpenStreetMap contributors"
               />
               <Marker position={[selectedLocation.lat, selectedLocation.lng]}>
                 <Popup>
-                  {selectedLocation.baseStation} <br /> {selectedLocation.state}
+                  {selectedLocation.baseStation} <br />
+                  {selectedLocation.state}
                 </Popup>
               </Marker>
             </MapContainer>

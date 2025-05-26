@@ -5,8 +5,9 @@
 /.pnp
 .pnp.js
 
-# Excel files
+# extentions files
 *.xlsx
+*.docx
 
 
 # testing
