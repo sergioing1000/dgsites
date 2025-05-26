@@ -5,6 +5,10 @@
 /.pnp
 .pnp.js
 
+# Excel files
+*.xlsx
+
+
 # testing
 /coverage
 
