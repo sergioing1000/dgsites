@@ -102,6 +102,23 @@ const ExcelUploadTable = () => {
 
   const closeModal = () => setSelectedLocation(null);
 
+  function formatDateKeys(obj) {
+    const formatted = {};
+    for (const key in obj) {
+      if (/^\d{8}$/.test(key)) {
+        // Format "20240101" → "2024-01-01"
+        const formattedKey = `${key.slice(0, 4)}-${key.slice(4, 6)}-${key.slice(
+          6
+        )}`;
+        formatted[formattedKey] = obj[key];
+      } else {
+        formatted[key] = obj[key];
+      }
+    }
+    return formatted;
+  }
+  
+
   const fetchAPI = async () => {
     const start = new Date(Date.now() - 1125 * 24 * 60 * 60 * 1000)
       .toISOString()
@@ -124,7 +141,8 @@ const ExcelUploadTable = () => {
       try {
         const res = await fetch(url);
         const json = await res.json();
-        const dailyData = json.properties?.parameter?.ALLSKY_SFC_SW_DWN || {};
+        const rawDailyData = json.properties?.parameter?.ALLSKY_SFC_SW_DWN || {};
+        const dailyData = formatDateKeys(rawDailyData);
 
         results.push({
           baseStation: row.baseStation,
@@ -148,7 +166,22 @@ const ExcelUploadTable = () => {
       await new Promise((resolve) => setTimeout(resolve, 5));
     }
 
-    const worksheet = XLSX.utils.json_to_sheet(results);
+
+    const headerOrder = [
+      "baseStation",
+      "state",
+      "latitude",
+      "longitude",
+      ...Object.keys(results[0]).filter(
+        (key) =>
+          !["baseStation", "state", "latitude", "longitude"].includes(key)
+      ),
+    ];
+
+    const worksheet = XLSX.utils.json_to_sheet(results, {
+      header: headerOrder,
+    });
+    
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Results');
     const excelBuffer = XLSX.write(workbook, {
