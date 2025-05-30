@@ -211,6 +211,14 @@ const ExcelUploadTable = () => {
       };
     });
 
+    row2.eachCell((cell) => {
+      cell.alignment = {
+        textRotation: 0,
+        vertical: "middle",
+        horizontal: "center",
+      };
+    })
+
     
     // Sheet 3: newsheet2 (static)
     const newsheet2 = workbook.addWorksheet("newsheet2");
