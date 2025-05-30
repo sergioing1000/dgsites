@@ -1,9 +1,9 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import * as XLSX from 'xlsx';
 import ExcelJS from "exceljs";
 import { saveAs } from 'file-saver';
 import './ExcelUploadTable.css';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import L from 'leaflet';
 
 import 'leaflet/dist/leaflet.css';
@@ -27,6 +27,7 @@ const ExcelUploadTable = () => {
   const [showProgress, setShowProgress] = useState(false);
   const [progress, setProgress] = useState(0);
   const [currentStation, setCurrentStation] = useState("");
+  const markerRef = useRef();
 
 
   const handleFileUpload = (event) => {
@@ -354,6 +355,10 @@ const ExcelUploadTable = () => {
             <h3>
               {selectedLocation.baseStation} - {selectedLocation.state}
             </h3>
+            <p>
+              <strong>Load:</strong> {selectedLocation.load || "N/A"}
+            </p>
+            
             <MapContainer
               center={[selectedLocation.lat, selectedLocation.lng]}
               zoom={6}
@@ -363,12 +368,23 @@ const ExcelUploadTable = () => {
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 attribution=""
               />
-              <Marker position={[selectedLocation.lat, selectedLocation.lng]}>
+
+              <Marker
+                position={[selectedLocation.lat, selectedLocation.lng]}
+                ref={markerRef}
+              >
                 <Popup>
-                  {selectedLocation.baseStation} <br />
-                  {selectedLocation.state}
+                  <div style={{ minWidth: "150px" }}>
+                    <strong>{selectedLocation.baseStation}</strong>
+                    <br />
+                    State: {selectedLocation.state}
+                    <br />
+                    Load: {selectedLocation.load || "N/A"}
+                  </div>
                 </Popup>
               </Marker>
+
+              <AutoOpenPopup markerRef={markerRef} />
             </MapContainer>
           </div>
         </div>
@@ -378,3 +394,16 @@ const ExcelUploadTable = () => {
 };
 
 export default ExcelUploadTable;
+
+const AutoOpenPopup = ({ markerRef }) => {
+  const map = useMap();
+
+  useEffect(() => {
+    if (markerRef.current) {
+      markerRef.current.openPopup();
+      map.setView(markerRef.current.getLatLng(), 6);
+    }
+  }, [markerRef, map]);
+
+  return null;
+};
