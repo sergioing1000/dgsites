@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import * as XLSX from 'xlsx';
+import ExcelJS from "exceljs";
 import { saveAs } from 'file-saver';
 import './ExcelUploadTable.css';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
@@ -44,10 +45,11 @@ const ExcelUploadTable = () => {
       const [, ...rows] = jsonData;
 
       const parsedData = rows.map((row) => ({
-        baseStation: row[1] || '',
-        state: row[2] || '',
-        latitude: row[3] || '',
-        longitude: row[4] || '',
+        baseStation: row[1] || "",
+        state: row[2] || "",
+        latitude: row[3] || "",
+        longitude: row[4] || "",
+        load: row[5] || "",
       }));
 
       setTableData(parsedData);
@@ -123,11 +125,11 @@ const ExcelUploadTable = () => {
     const start = new Date(Date.now() - 1125 * 24 * 60 * 60 * 1000)
       .toISOString()
       .slice(0, 10)
-      .replace(/-/g, '');
+      .replace(/-/g, "");
     const end = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
       .toISOString()
       .slice(0, 10)
-      .replace(/-/g, '');
+      .replace(/-/g, "");
 
     setShowProgress(true);
     const results = [];
@@ -141,7 +143,8 @@ const ExcelUploadTable = () => {
       try {
         const res = await fetch(url);
         const json = await res.json();
-        const rawDailyData = json.properties?.parameter?.ALLSKY_SFC_SW_DWN || {};
+        const rawDailyData =
+          json.properties?.parameter?.ALLSKY_SFC_SW_DWN || {};
         const dailyData = formatDateKeys(rawDailyData);
 
         results.push({
@@ -149,16 +152,17 @@ const ExcelUploadTable = () => {
           state: row.state,
           latitude: row.latitude,
           longitude: row.longitude,
-          ...dailyData
+          load: row.load,
+          ...dailyData,
         });
-        
       } catch (err) {
         results.push({
           baseStation: row.baseStation,
           state: row.state,
           latitude: row.latitude,
           longitude: row.longitude,
-          error: 'Fetch failed'
+          load: row.load,
+          error: "Fetch failed",
         });
       }
 
@@ -166,30 +170,60 @@ const ExcelUploadTable = () => {
       await new Promise((resolve) => setTimeout(resolve, 5));
     }
 
+    // Create a workbook
+    const workbook = new ExcelJS.Workbook();
+
+    // Sheet 1: Results
+    const resultSheet = workbook.addWorksheet("Results");
 
     const headerOrder = [
       "baseStation",
       "state",
       "latitude",
       "longitude",
+      "load",
       ...Object.keys(results[0]).filter(
         (key) =>
           !["baseStation", "state", "latitude", "longitude"].includes(key)
       ),
     ];
 
-    const worksheet = XLSX.utils.json_to_sheet(results, {
-      header: headerOrder,
+    resultSheet.addRow(headerOrder);
+    results.forEach((row) => {
+      const rowData = headerOrder.map((key) => row[key] ?? "");
+      resultSheet.addRow(rowData);
     });
+
+    // Sheet 2: newsheet1 with vertical text in first row
+    const newsheet1 = workbook.addWorksheet("newsheet1");
+
+    const firstRowData = tableData.map((row) => row.baseStation || "Unnamed");
+    const secondRowData = tableData.map((row) => row.load || "");
+
+    const row1 = newsheet1.addRow(firstRowData);
+    const row2 = newsheet1.addRow(secondRowData);
+
+    row1.eachCell((cell) => {
+      cell.alignment = {
+        textRotation: 90,
+        vertical: "middle",
+        horizontal: "center",
+      };
+    });
+
     
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Results');
-    const excelBuffer = XLSX.write(workbook, {
-      bookType: 'xlsx',
-      type: 'array'
+    // Sheet 3: newsheet2 (static)
+    const newsheet2 = workbook.addWorksheet("newsheet2");
+    newsheet2.addRow(["Info"]);
+    newsheet2.addRow(["Additional"]);
+    newsheet2.addRow(["Data"]);
+
+    // Generate and download
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     });
-    const blob = new Blob([excelBuffer], { type: 'application/octet-stream' });
-    saveAs(blob, 'results.xlsx');
+    saveAs(blob, "results.xlsx");
 
     setShowProgress(false);
   };
@@ -238,6 +272,7 @@ const ExcelUploadTable = () => {
                 <th onClick={() => handleSort("state")}>State</th>
                 <th onClick={() => handleSort("latitude")}>Latitude</th>
                 <th onClick={() => handleSort("longitude")}>Longitude</th>
+                <th onClick={() => handleSort("load")}>Load</th>{" "}
               </tr>
             </thead>
             <tbody>
@@ -251,6 +286,7 @@ const ExcelUploadTable = () => {
                   <td>{row.state}</td>
                   <td>{row.latitude}</td>
                   <td>{row.longitude}</td>
+                  <td>{row.load}</td>
                 </tr>
               ))}
             </tbody>
