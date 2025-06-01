@@ -123,7 +123,11 @@ const ExcelUploadTable = () => {
   
 
   const fetchAPI = async () => {
-    const start = new Date(Date.now() - 1125 * 24 * 60 * 60 * 1000)
+    /* const start = new Date(Date.now() - 1125 * 24 * 60 * 60 * 1000)
+      .toISOString()
+      .slice(0, 10)
+      .replace(/-/g, ""); */
+    const start = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000)
       .toISOString()
       .slice(0, 10)
       .replace(/-/g, "");
@@ -195,16 +199,39 @@ const ExcelUploadTable = () => {
       resultSheet.addRow(rowData);
     });
 
+    // After populating rows in resultSheet
+    resultSheet.views = [
+      {
+        state: "frozen",
+        xSplit: 6,
+        ySplit: 1,
+      },
+    ];
+
+    resultSheet.columns.forEach((column) => {
+      let maxLength = 10;
+      column.eachCell({ includeEmpty: true }, (cell) => {
+        const cellValue = cell.value ? cell.value.toString() : "";
+        maxLength = Math.max(maxLength, cellValue.length);
+      });
+      column.width = maxLength + 2;
+    });
+
     // Sheet 2: newsheet1 with vertical text in first row
     const newsheet1 = workbook.addWorksheet("newsheet1");
 
-    const firstRowData = tableData.map((row) => row.baseStation || "Unnamed");
-    const secondRowData = tableData.map((row) => row.load || "");
+    // Add labels to A1, B1, C1
+    newsheet1.getCell("A1").value = "Description";
+    newsheet1.getCell("B1").value = "Value";
+    newsheet1.getCell("C1").value = "Price";
 
-    const row1 = newsheet1.addRow(firstRowData);
-    const row2 = newsheet1.addRow(secondRowData);
+    // Start from column D (i.e., column index 4)
+    const startCol = 4;
 
-    row1.eachCell((cell) => {
+    // First row: baseStation
+    tableData.forEach((row, index) => {
+      const cell = newsheet1.getCell(1, startCol + index); // Row 1, column D+
+      cell.value = row.baseStation || "Unnamed";
       cell.alignment = {
         textRotation: 90,
         vertical: "middle",
@@ -212,15 +239,23 @@ const ExcelUploadTable = () => {
       };
     });
 
-    row2.eachCell((cell) => {
+    // Make the entire first row bold
+    const totalCols = startCol + tableData.length; // includes D1..etc
+    for (let col = 1; col <= totalCols; col++) {
+      newsheet1.getCell(1, col).font = { bold: true };
+    }
+
+    // Second row: load
+    tableData.forEach((row, index) => {
+      const cell = newsheet1.getCell(2, startCol + index); // Row 2, column D+
+      cell.value = row.load || "";
       cell.alignment = {
         textRotation: 0,
         vertical: "middle",
         horizontal: "center",
       };
-    })
+    });
 
-    
     // Sheet 3: newsheet2 (static)
     const newsheet2 = workbook.addWorksheet("newsheet2");
     newsheet2.addRow(["Info"]);
