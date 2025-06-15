@@ -1,0 +1,56 @@
+
+
+.options-container {
+    padding: 20px;
+    font-family: Arial, sans-serif;
+    background-color: #F4F6F8;
+    border-radius: 10px;
+    max-width: 90%;
+    margin: 0 auto;
+  }
+  
+  .options-title {
+    color: #012146;
+  }
+  
+  .options-dropdown {
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #BEC2C7;
+    background-color: #ffffff;
+    color: #012146;
+    font-weight: bold;
+    margin-bottom: 20px;
+    width: 100%;
+    max-width: 400px;
+  }
+  
+  .options-next-button {
+    padding: 10px 20px;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-weight: bold;
+    cursor: not-allowed;
+    background-color: #BEC2C7;
+    transition: background-color 0.3s ease, cursor 0.3s ease;
+  }
+  
+  .options-next-button.active {
+    background-color: #2563C9;
+    cursor: pointer;
+  }
+  
+  .options-content {
+    margin-top: 30px;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+    min-height: 120px;
+  }
+  
+  .options-content.show {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  

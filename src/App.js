@@ -1,5 +1,5 @@
-import ExcelUploadTable from './components/exceluploadtable.jsx';
-import Header from './components/header.jsx'
+import Header from "./components/header.jsx";
+import Options from "./components/Options.jsx";
 import './App.css';
 import "leaflet/dist/leaflet.css";
 
@@ -8,8 +8,9 @@ function App() {
   return (
     <>
       <Header />
-      <ExcelUploadTable />
-    </>    
+      <Options />
+      {/* <ExcelUploadTable /> */}
+    </>
   );
 }
 
