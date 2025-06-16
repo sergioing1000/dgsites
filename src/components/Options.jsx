@@ -2,8 +2,8 @@ import React, { useState } from "react";
 
 import SingleSite from "./singlesite.jsx";
 import ExcelUploadTable from "./exceluploadtable.jsx";
-import CurrentLocation from "./CurrentLocation.jsx";
-import "./Options.css";
+import CurrentLocation from "./currentlocation.jsx";
+import "./options.css";
 
 const Options = () => {
   const [selectedOption, setSelectedOption] = useState("");

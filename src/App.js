@@ -1,5 +1,5 @@
 import Header from "./components/header.jsx";
-import Options from "./components/Options.jsx";
+import Options from "./components/options.jsx";
 import './App.css';
 import "leaflet/dist/leaflet.css";
 
