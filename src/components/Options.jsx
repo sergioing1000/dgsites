@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-import SingleSite from "./SingleSite.jsx";
+import SingleSite from "./singlesite.jsx";
 import ExcelUploadTable from "./exceluploadtable.jsx";
 import CurrentLocation from "./CurrentLocation.jsx";
 import "./Options.css";
