@@ -3,10 +3,10 @@ import React, { useState } from "react";
 import SingleSite from "./singlesite.jsx";
 import ExcelUploadTable from "./exceluploadtable.jsx";
 import CurrentLocation from "./currentlocation.jsx";
-import "./options.css";
+import "./options1.css";
 
 
-const Options = () => {
+const Options1 = () => {
   const [selectedOption, setSelectedOption] = useState("");
   const [showComponent, setShowComponent] = useState(false);
 
@@ -53,4 +53,4 @@ const Options = () => {
   );
 };
 
-export default Options;
+export default Options1;

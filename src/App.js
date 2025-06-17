@@ -1,5 +1,5 @@
 import Header from "./components/header.jsx";
-import Options from "./components/options.jsx";
+import Options1 from "./components/options1.jsx";
 import './App.css';
 import "leaflet/dist/leaflet.css";
 
@@ -8,7 +8,7 @@ function App() {
   return (
     <>
       <Header />
-      <Options />
+      <Options1 />
       {/* <ExcelUploadTable /> */}
     </>
   );
