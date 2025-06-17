@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect, useRef } from "react";
 import * as XLSX from 'xlsx';
 import ExcelJS from "exceljs";
 import { saveAs } from 'file-saver';
-import "./exceluploadtable.css";
+import "./exceluploadtable1.css";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import L from 'leaflet';
 

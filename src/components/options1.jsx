@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 
 import SingleSite1 from "./singlesite1.jsx";
-import ExcelUploadTable from "./exceluploadtable.jsx";
+import ExcelUploadTable1 from "./exceluploadtable1.jsx";
 import CurrentLocation1 from "./currentlocation1.jsx";
 import "./options1.css";
 
@@ -46,7 +46,7 @@ const Options1 = () => {
 
       <div className={`options-content ${showComponent ? "show" : ""}`}>
         {showComponent && selectedOption === "single" && <SingleSite1 />}
-        {showComponent && selectedOption === "multi" && <ExcelUploadTable />}
+        {showComponent && selectedOption === "multi" && <ExcelUploadTable1 />}
         {showComponent && selectedOption === "current" && <CurrentLocation1 />}
       </div>
     </div>
