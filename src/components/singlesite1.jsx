@@ -5,7 +5,7 @@ import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
 import Radiation from "./radiation.jsx";
 import NasaPower from "../assets/images/nasapower.jpeg";
 
-import "./singlesite.css";
+import "./singlesite1.css";
 import "leaflet/dist/leaflet.css";
 
 const SingleSite = () => {
