@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import "./currentLocation.css";
+import "./currentlocation.css";
 
 const CurrentLocation = () => {
   const [location, setLocation] = useState(null);
