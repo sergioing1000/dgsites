@@ -272,7 +272,7 @@ const SingleSite = () => {
         <Radiation {...formData} />
       ) : (
         <>
-          <h2>INPUNT DATA</h2>
+          <h2>INPUT DATA</h2>
           <div className="step-content fade-in">{renderStep()}</div>
           <div className="button-group">
             {step > 1 && step <= 6 && (

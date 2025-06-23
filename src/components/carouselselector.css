@@ -1,0 +1,71 @@
+.carousel-container {
+    text-align: center;
+    padding: 20px;
+  }
+  
+  .carousel {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+    border: 2px solid #BEC2C7;
+    border-radius: 8px;
+    padding: 20px;
+  }
+  
+  .arrow-button {
+    font-size: 24px;
+    padding: 10px;
+    margin: 0 10px;
+    background-color: #012146;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+  }
+  
+  .card {
+    background-color: #5B9BD5;
+    color: white;
+    width: 150px;
+    height: 180px;
+    margin: 0 10px;
+    border-radius: 12px;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    opacity: 0.6;
+    transition: all 0.3s ease;
+  }
+  
+  .card:hover {
+    transform: scale(1.05);
+    opacity: 1;
+  }
+  
+  .card.active {
+    background-color: #00B0F0;
+    opacity: 1;
+    border: 3px solid #2563C9;
+  }
+  
+  .card-icon {
+    width: 100px;
+    height: 100px;
+    margin-bottom: 10px;
+  }
+  
+  .card-label {
+    font-weight: bold;
+    font-size: 16px;
+  }
+  
+  .selected-component {
+    margin-top: 30px;
+    padding: 20px;
+    border: 2px solid #C55A11;
+    border-radius: 8px;
+  }
