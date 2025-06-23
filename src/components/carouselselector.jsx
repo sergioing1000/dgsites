@@ -1,7 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import "./carouselselector.css";
-import clickSoundFile from "../assets/sounds/click.mp3";
-
 
 import SingleSite from "./singlesite1.jsx";
 import ExcelUploadTable from "./exceluploadtable1.jsx";
@@ -12,6 +10,8 @@ import locationIcon from "../assets/images/location.svg";
 import multilocationIcon from "../assets/images/multilocation.svg";
 import currentlocationIcon from "../assets/images/currentlocation2.svg";
 import documentationIcon from "../assets/images/documentation.svg";
+
+import clickSoundFile from "../assets/sounds/click.mp3"; 
 
 const options = [
   {
@@ -42,18 +42,33 @@ const options = [
 
 const CarouselSelector = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [selectedOption, setSelectedOption] = useState(options[0].key); // Start with first
+  const [selectedOption, setSelectedOption] = useState(null); // Start with NO component shown
+
+  const clickSoundRef = useRef(null);
+
+  useEffect(() => {
+    clickSoundRef.current = new Audio(clickSoundFile);
+  }, []);
+
+  const playClickSound = () => {
+    if (clickSoundRef.current) {
+      clickSoundRef.current.currentTime = 0;
+      clickSoundRef.current.play();
+    }
+  };
 
   const handleNext = () => {
     const newIndex = (currentIndex + 1) % options.length;
     setCurrentIndex(newIndex);
     setSelectedOption(options[newIndex].key);
+    playClickSound();
   };
 
   const handlePrev = () => {
     const newIndex = (currentIndex - 1 + options.length) % options.length;
     setCurrentIndex(newIndex);
     setSelectedOption(options[newIndex].key);
+    playClickSound();
   };
 
   const handleSelect = (index, key) => {
@@ -85,7 +100,8 @@ const CarouselSelector = () => {
       </div>
 
       <div className="selected-component">
-        {options.find((opt) => opt.key === selectedOption)?.component}
+        {selectedOption &&
+          options.find((opt) => opt.key === selectedOption)?.component}
       </div>
     </div>
   );
