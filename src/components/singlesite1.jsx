@@ -14,14 +14,6 @@ const SingleSite = () => {
     latitude: "",
     longitude: "",
     years: "",
-    batteryType: "",
-    autonomy: "",
-    autonomyOther: "",
-    panelType: "",
-    panelOther: "",
-    load1: "0",
-    load2: "0",
-    load3: "0",
   });
   const [errors, setErrors] = useState({});
   const [showMapModal, setShowMapModal] = useState(false);
@@ -53,26 +45,6 @@ const SingleSite = () => {
       case 2:
         if (!formData.years)
           newErrors.years = "Please select an option for Historic data";
-        break;
-      case 3:
-        if (!formData.batteryType)
-          newErrors.batteryType = "Please select a battery type";
-        break;
-      case 4:
-        if (!formData.autonomy) newErrors.autonomy = "Please select autonomy";
-        if (formData.autonomy === "Other" && !formData.autonomyOther)
-          newErrors.autonomyOther = "Please input autonomy value in hours...";
-        break;
-      case 5:
-        if (!formData.panelType)
-          newErrors.panelType = "Please select Solar panel type";
-        if (formData.panelType === "Other" && !formData.panelOther)
-          newErrors.panelOther = "Please input panel value in Watts peak";
-        break;
-      case 6:
-        if (!formData.load1) newErrors.load1 = "Please input Load 1 in Watts";
-        if (!formData.load2) newErrors.load2 = "Please input Load 2 in Watts";
-        if (!formData.load3) newErrors.load3 = "Please input Load 3 in Watts";
         break;
       default:
         break;
@@ -136,131 +108,19 @@ const SingleSite = () => {
           <div>
             <div>
               <a target="" href="https://power.larc.nasa.gov/">
-                <img src={NasaPower} alt="Nasa Power Logo" />
+                <img src={NasaPower} alt="Nasa Power Logo" width={200}/>
               </a>
             </div>
             <label>Historic Data:</label>
             <select name="years" value={formData.years} onChange={handleChange}>
               <option value="">--Select--</option>
-              <option value="1">One year</option>
-              <option value="2">Two years</option>
-              <option value="3">Three years</option>
+              <option value="30">Last 30 days</option>
+              <option value="12">Last 12 months</option>
+              <option value="24">Last 24 months</option>
+              <option value="36">Last 36 months</option>
             </select>
             {errors.years && <span className="error">{errors.years}</span>}
           </div>
-        )}
-
-        {step === 3 && (
-          <div>
-            <label>Battery Type [Ah]</label>
-            <select
-              name="batteryType"
-              value={formData.batteryType}
-              onChange={handleChange}
-            >
-              <option value="">--Select--</option>
-              <option value="411">411 (150Ah)</option>
-              <option value="311">311 (100Ah)</option>
-              <option value="121">121 (50Ah)</option>
-            </select>
-            {errors.batteryType && (
-              <span className="error">{errors.batteryType}</span>
-            )}
-          </div>
-        )}
-
-        {step === 4 && (
-          <div>
-            <label>Autonomy [h]:</label>
-            <select
-              name="autonomy"
-              value={formData.autonomy}
-              onChange={handleChange}
-            >
-              <option value="">--Select--</option>
-              <option value="6">6 hours</option>
-              <option value="12">12 hours</option>
-              <option value="18">18 hours</option>
-              <option value="24">24 hours</option>
-              <option value="36">36 hours</option>
-              <option value="Other">Other</option>
-            </select>
-            {formData.autonomy === "Other" && (
-              <input
-                name="autonomyOther"
-                placeholder="Enter hours"
-                value={formData.autonomyOther}
-                onChange={handleChange}
-              />
-            )}
-            {(errors.autonomy || errors.autonomyOther) && (
-              <span className="error">
-                {errors.autonomy || errors.autonomyOther}
-              </span>
-            )}
-          </div>
-        )}
-
-        {step === 5 && (
-          <div>
-            <label>Solar Panel Type:</label>
-            <select
-              name="panelType"
-              value={formData.panelType}
-              onChange={handleChange}
-            >
-              <option value="">--Select--</option>
-              <option value="530">530 Wp</option>
-              <option value="550">550 Wp</option>
-              <option value="585">585 Wp</option>
-              <option value="Other">Other</option>
-            </select>
-            {formData.panelType === "Other" && (
-              <input
-                name="panelOther"
-                placeholder="Enter Wp"
-                value={formData.panelOther}
-                onChange={handleChange}
-              />
-            )}
-            {(errors.panelType || errors.panelOther) && (
-              <span className="error">
-                {errors.panelType || errors.panelOther}
-              </span>
-            )}
-          </div>
-        )}
-
-        {step === 6 && (
-          <>
-            <div>
-              <label>Load 1 [W]:</label>
-              <input
-                name="load1"
-                value={formData.load1}
-                onChange={handleChange}
-              />
-              {errors.load1 && <span className="error">{errors.load1}</span>}
-            </div>
-            <div>
-              <label>Load 2 [W]:</label>
-              <input
-                name="load2"
-                value={formData.load2}
-                onChange={handleChange}
-              />
-              {errors.load2 && <span className="error">{errors.load2}</span>}
-            </div>
-            <div>
-              <label>Load 3 [W]:</label>
-              <input
-                name="load3"
-                value={formData.load3}
-                onChange={handleChange}
-              />
-              {errors.load3 && <span className="error">{errors.load3}</span>}
-            </div>
-          </>
         )}
       </div>
     );
@@ -275,7 +135,7 @@ const SingleSite = () => {
           <h2>INPUT DATA</h2>
           <div className="step-content fade-in">{renderStep()}</div>
           <div className="button-group">
-            {step > 1 && step <= 6 && (
+            {step > 1 && (
               <button onClick={handleBack} className="btn back">
                 Back
               </button>
@@ -287,12 +147,7 @@ const SingleSite = () => {
                 </button>
               </div>
             )}
-            {step > 1 && step < 6 && (
-              <button onClick={handleNext} className="btn next">
-                Next
-              </button>
-            )}
-            {step === 6 && (
+            {step === 2 && (
               <button onClick={handleSend} className="btn send">
                 Send
               </button>

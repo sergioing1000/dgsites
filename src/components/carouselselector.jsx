@@ -11,6 +11,9 @@ import multilocationIcon from "../assets/images/multilocation.svg";
 import currentlocationIcon from "../assets/images/currentlocation2.svg";
 import documentationIcon from "../assets/images/documentation.svg";
 
+import RightArr from "../assets/images/rightarrow.svg";
+import LeftArr from "../assets/images/leftarrow.svg";
+
 import clickSoundFile from "../assets/sounds/click.mp3"; 
 
 const options = [
@@ -80,7 +83,7 @@ const CarouselSelector = () => {
     <div className="carousel-container">
       <div className="carousel">
         <button className="arrow-button" onClick={handlePrev}>
-          &lt;
+          <img src={LeftArr} alt="left arrow" width={40} />
         </button>
 
         {options.map((option, index) => (
@@ -95,7 +98,7 @@ const CarouselSelector = () => {
         ))}
 
         <button className="arrow-button" onClick={handleNext}>
-          &gt;
+          <img src={RightArr} alt="right arrow" width={40} />
         </button>
       </div>
 
