@@ -16,6 +16,9 @@ const SingleSite = () => {
     latitude: "",
     longitude: "",
     years: "",
+    useCustomDates: false,
+    startDate: "",
+    endDate: "",
   });
   const [errors, setErrors] = useState({});
   const [showMapModal, setShowMapModal] = useState(false);
@@ -47,8 +50,14 @@ const SingleSite = () => {
         if (!formData.longitude) newErrors.longitude = "Longitude is required";
         break;
       case 2:
-        if (!formData.years)
-          newErrors.years = "Please select an option for Historic data";
+        if (formData.useCustomDates) {
+          if (!formData.startDate)
+            newErrors.startDate = "Start Date is required";
+          if (!formData.endDate) newErrors.endDate = "End Date is required";
+        } else {
+          if (!formData.years)
+            newErrors.years = "Please select an option for Historic data";
+        }
         break;
       default:
         break;
@@ -64,29 +73,40 @@ const SingleSite = () => {
   const handleBack = () => setStep((prev) => prev - 1);
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+    const { name, value, type, checked } = e.target;
+    if (type === "checkbox") {
+      setFormData({ ...formData, [name]: checked });
+    } else {
+      setFormData({ ...formData, [name]: value });
+    }
   };
 
   const calculateDateRange = () => {
-    const endDate = new Date();
-    const startDate = new Date();
-
-    if (formData.years === "30") {
-      startDate.setDate(endDate.getDate() - 30);
+    if (formData.useCustomDates) {
+      return {
+        start: formData.startDate,
+        end: formData.endDate,
+      };
     } else {
-      const months = parseInt(formData.years, 10);
-      startDate.setMonth(endDate.getMonth() - months);
+      const endDate = new Date();
+      const startDate = new Date();
+
+      if (formData.years === "30") {
+        startDate.setDate(endDate.getDate() - 30);
+      } else {
+        const months = parseInt(formData.years, 10);
+        startDate.setMonth(endDate.getMonth() - months);
+      }
+
+      const formatDate = (date) => {
+        return date.toISOString().split("T")[0];
+      };
+
+      return {
+        start: formatDate(startDate),
+        end: formatDate(endDate),
+      };
     }
-
-    const formatDate = (date) => {
-      return date.toISOString().split("T")[0];
-    };
-
-    return {
-      start: formatDate(startDate),
-      end: formatDate(endDate),
-    };
   };
 
   const handleSend = async () => {
@@ -116,8 +136,10 @@ const SingleSite = () => {
       );
 
       console.log(response.data);
+
+      const BASE_URL = "https://wind-data-api-production.up.railway.app";
       if (response.data && response.data.excel_file_url) {
-        setExcelFileUrl(response.data.excel_file_url);
+        setExcelFileUrl(BASE_URL + response.data.excel_file_url);
       }
     } catch (error) {
       console.error("Error generating file:", error);
@@ -170,15 +192,79 @@ const SingleSite = () => {
                 <img src={NasaPower} alt="Nasa Power Logo" width={200} />
               </a>
             </div>
-            <label>Historic Data:</label>
-            <select name="years" value={formData.years} onChange={handleChange}>
-              <option value="">--Select--</option>
-              <option value="30">Last 30 days</option>
-              <option value="12">Last 12 months</option>
-              <option value="24">Last 24 months</option>
-              <option value="36">Last 36 months</option>
-            </select>
-            {errors.years && <span className="error">{errors.years}</span>}
+
+            <div style={{ marginTop: "1rem", marginBottom: "1rem" }}>
+              <label>
+                <input
+                  type="radio"
+                  name="useCustomDates"
+                  value={false}
+                  checked={!formData.useCustomDates}
+                  onChange={() =>
+                    setFormData((prev) => ({ ...prev, useCustomDates: false }))
+                  }
+                />{" "}
+                Use Historic Data
+              </label>
+              <br />
+              <label>
+                <input
+                  type="radio"
+                  name="useCustomDates"
+                  value={true}
+                  checked={formData.useCustomDates}
+                  onChange={() =>
+                    setFormData((prev) => ({ ...prev, useCustomDates: true }))
+                  }
+                />{" "}
+                Use Custom Dates
+              </label>
+            </div>
+
+            {!formData.useCustomDates ? (
+              <>
+                <label>Historic Data:</label>
+                <select
+                  name="years"
+                  value={formData.years}
+                  onChange={handleChange}
+                >
+                  <option value="">--Select--</option>
+                  <option value="30">Last 30 days</option>
+                  <option value="12">Last 12 months</option>
+                  <option value="24">Last 24 months</option>
+                  <option value="36">Last 36 months</option>
+                </select>
+                {errors.years && <span className="error">{errors.years}</span>}
+              </>
+            ) : (
+              <>
+                <div>
+                  <label>Start Date:</label>
+                  <input
+                    type="date"
+                    name="startDate"
+                    value={formData.startDate}
+                    onChange={handleChange}
+                  />
+                  {errors.startDate && (
+                    <span className="error">{errors.startDate}</span>
+                  )}
+                </div>
+                <div>
+                  <label>End Date:</label>
+                  <input
+                    type="date"
+                    name="endDate"
+                    value={formData.endDate}
+                    onChange={handleChange}
+                  />
+                  {errors.endDate && (
+                    <span className="error">{errors.endDate}</span>
+                  )}
+                </div>
+              </>
+            )}
           </div>
         )}
       </div>
