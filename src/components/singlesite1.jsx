@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import axios from "axios";
 import { FaGlobe, FaFileExcel } from "react-icons/fa";
 import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
-import { Bars } from "react-loader-spinner";
+import { ClipLoader } from "react-spinners";
 
 import Radiation from "./radiation.jsx";
 import NasaPower from "../assets/images/nasapower.jpeg";
@@ -301,12 +301,12 @@ const SingleSite = () => {
 
           {loading && (
             <div style={{ marginTop: "1rem", textAlign: "center" }}>
-              <Bars
-                height="80"
-                width="80"
-                color="#4fa94d"
-                ariaLabel="circles-loading"
-                visible={true}
+              <ClipLoader
+                color={"#123abc"}
+                loading={loading}
+                size={50}
+                aria-label="Loading Spinner"
+                data-testid="loader"
               />
             </div>
           )}
