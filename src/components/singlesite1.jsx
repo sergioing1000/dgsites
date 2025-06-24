@@ -1,6 +1,8 @@
 import React, { useState } from "react";
-import { FaGlobe } from "react-icons/fa";
+import axios from "axios";
+import { FaGlobe, FaFileExcel } from "react-icons/fa";
 import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
+import { Bars } from "react-loader-spinner";
 
 import Radiation from "./radiation.jsx";
 import NasaPower from "../assets/images/nasapower.jpeg";
@@ -19,6 +21,8 @@ const SingleSite = () => {
   const [showMapModal, setShowMapModal] = useState(false);
   const [markerPosition, setMarkerPosition] = useState(null);
   const [showRadiation, setShowRadiation] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [excelFileUrl, setExcelFileUrl] = useState("");
 
   const LocationMarker = ({ setMarkerPosition, setFormData }) => {
     useMapEvents({
@@ -64,10 +68,61 @@ const SingleSite = () => {
     setFormData({ ...formData, [name]: value });
   };
 
-  const handleSend = () => {
-    if (validateStep()) {
-      alert(JSON.stringify(formData, null, 2));
-      setShowRadiation(true);
+  const calculateDateRange = () => {
+    const endDate = new Date();
+    const startDate = new Date();
+
+    if (formData.years === "30") {
+      startDate.setDate(endDate.getDate() - 30);
+    } else {
+      const months = parseInt(formData.years, 10);
+      startDate.setMonth(endDate.getMonth() - months);
+    }
+
+    const formatDate = (date) => {
+      return date.toISOString().split("T")[0];
+    };
+
+    return {
+      start: formatDate(startDate),
+      end: formatDate(endDate),
+    };
+  };
+
+  const handleSend = async () => {
+    if (!validateStep()) return;
+
+    const { start, end } = calculateDateRange();
+    const data = {
+      station_name: "Station Site A",
+      latitude: parseFloat(formData.latitude),
+      longitude: parseFloat(formData.longitude),
+      start,
+      end,
+    };
+
+    setLoading(true);
+    setExcelFileUrl("");
+
+    try {
+      const response = await axios.post(
+        "https://wind-data-api-production.up.railway.app/generate-files",
+        data,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      console.log(response.data);
+      if (response.data && response.data.excel_file_url) {
+        setExcelFileUrl(response.data.excel_file_url);
+      }
+    } catch (error) {
+      console.error("Error generating file:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -107,8 +162,12 @@ const SingleSite = () => {
         {step === 2 && (
           <div>
             <div>
-              <a target="" href="https://power.larc.nasa.gov/">
-                <img src={NasaPower} alt="Nasa Power Logo" width={200}/>
+              <a
+                target="_blank"
+                rel="noreferrer"
+                href="https://power.larc.nasa.gov/"
+              >
+                <img src={NasaPower} alt="Nasa Power Logo" width={200} />
               </a>
             </div>
             <label>Historic Data:</label>
@@ -153,6 +212,31 @@ const SingleSite = () => {
               </button>
             )}
           </div>
+
+          {loading && (
+            <div style={{ marginTop: "1rem", textAlign: "center" }}>
+              <Bars
+                height="80"
+                width="80"
+                color="#4fa94d"
+                ariaLabel="circles-loading"
+                visible={true}
+              />
+            </div>
+          )}
+
+          {excelFileUrl && (
+            <div style={{ marginTop: "1rem", textAlign: "center" }}>
+              <a
+                href={excelFileUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="excel-download-link"
+              >
+                <FaFileExcel size={32} color="#217346" /> Download Excel File
+              </a>
+            </div>
+          )}
 
           {showMapModal && (
             <div className="modal">
