@@ -4,7 +4,6 @@ import { FaGlobe, FaFileExcel } from "react-icons/fa";
 import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
 import { ClipLoader } from "react-spinners";
 
-import Radiation from "./radiation.jsx";
 import NasaPower from "../assets/images/nasapower.jpeg";
 
 import "./singlesite1.css";
@@ -23,7 +22,6 @@ const SingleSite = () => {
   const [errors, setErrors] = useState({});
   const [showMapModal, setShowMapModal] = useState(false);
   const [markerPosition, setMarkerPosition] = useState(null);
-  const [showRadiation, setShowRadiation] = useState(false);
   const [loading, setLoading] = useState(false);
   const [excelFileUrl, setExcelFileUrl] = useState("");
 
@@ -273,11 +271,7 @@ const SingleSite = () => {
 
   return (
     <div className="multi-step-form">
-      {showRadiation ? (
-        <Radiation {...formData} />
-      ) : (
-        <>
-          <h2>INPUT DATA</h2>
+        <h2>INPUT DATA</h2>
           <div className="step-content fade-in">{renderStep()}</div>
           <div className="button-group">
             {step > 1 && (
@@ -375,8 +369,6 @@ const SingleSite = () => {
               </div>
             </div>
           )}
-        </>
-      )}
     </div>
   );
 };
