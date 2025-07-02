@@ -418,6 +418,10 @@ const ExcelUploadTable = () => {
             </select>
           </div>
 
+          <pre style={{ textAlign: "left", padding: "0 0 10px 10px" }}>
+            Total sites loaded: {sortedData.length}
+          </pre>
+
           <table className="styled-table">
             <thead>
               <tr>
