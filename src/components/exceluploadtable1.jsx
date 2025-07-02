@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect, useRef } from "react";
 import * as XLSX from 'xlsx';
 import ExcelJS from "exceljs";
 import { saveAs } from 'file-saver';
+import Ziptemplate from "../assets/sitestemplate.zip";
 import "./exceluploadtable1.css";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import L from 'leaflet';
@@ -17,6 +18,8 @@ L.Icon.Default.mergeOptions({
     'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
+
+
 const ExcelUploadTable = () => {
   const [tableData, setTableData] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -28,10 +31,14 @@ const ExcelUploadTable = () => {
   const [progress, setProgress] = useState(0);
   const [currentStation, setCurrentStation] = useState("");
   const markerRef = useRef();
+  const [hasUploaded, setHasUploaded] = useState(false);
+
 
   const handleFileUpload = (event) => {
     const file = event.target.files[0];
     if (!file) return;
+
+    setHasUploaded(true); // ← add this line
 
     const reader = new FileReader();
     reader.onload = (e) => {
@@ -384,12 +391,19 @@ const ExcelUploadTable = () => {
   return (
     <div className="excel-upload-container">
       <h2 className="title">Upload Excel File</h2>
+
       <input
         type="file"
         accept=".xlsx, .xls"
         onChange={handleFileUpload}
         className="upload-button"
       />
+
+      {!hasUploaded && (
+      <div>
+        <a href={Ziptemplate}> Download Excel template</a>
+      </div>
+      )}
 
       {tableData.length > 0 && (
         <>
