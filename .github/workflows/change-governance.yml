@@ -1,0 +1,60 @@
+name: Change governance
+
+on:
+  pull_request:
+    types:
+      - opened
+      - edited
+      - synchronize
+      - reopened
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  validate-change:
+    name: Validate change metadata
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Validate pull request title
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          pattern='^CR-FE-[0-9]{3}: .+'
+          if [[ ! "$PR_TITLE" =~ $pattern ]]; then
+            echo "The pull request title must use: CR-FE-###: Description"
+            exit 1
+          fi
+
+      - name: Validate commit messages
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          pattern='^(feat|fix|docs|style|refactor|test|build|ci|chore|revert)(\([a-zA-Z0-9._/-]+\))?!?: .+'
+          mapfile -t messages < <(
+            gh api --paginate "/repos/${REPOSITORY}/pulls/${PR_NUMBER}/commits" \
+              --jq '.[].commit.message | split("\n")[0]'
+          )
+
+          if (( ${#messages[@]} == 0 )); then
+            echo "No commits were found for this pull request."
+            exit 1
+          fi
+
+          invalid=0
+          for message in "${messages[@]}"; do
+            if [[ ! "$message" =~ $pattern ]]; then
+              echo "Invalid commit message: $message"
+              invalid=1
+            fi
+          done
+
+          if (( invalid != 0 )); then
+            echo "Use: type(optional-scope): description"
+            exit 1
+          fi
