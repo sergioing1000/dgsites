@@ -5,6 +5,7 @@ import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
 import { ClipLoader } from "react-spinners";
 
 import NasaPower from "../assets/images/nasapower.jpeg";
+import { API_ENDPOINTS, resolveBackendUrl } from "../config/api";
 
 import "./singlesite1.css";
 import "leaflet/dist/leaflet.css";
@@ -124,7 +125,7 @@ const SingleSite = () => {
 
     try {
       const response = await axios.post(
-        "https://wind-data-api-production.up.railway.app/generate-files",
+        API_ENDPOINTS.generateFiles,
         data,
         {
           headers: {
@@ -135,9 +136,8 @@ const SingleSite = () => {
 
       console.log(response.data);
 
-      const BASE_URL = "https://wind-data-api-production.up.railway.app";
       if (response.data && response.data.excel_file_url) {
-        setExcelFileUrl(BASE_URL + response.data.excel_file_url);
+        setExcelFileUrl(resolveBackendUrl(response.data.excel_file_url));
       }
     } catch (error) {
       console.error("Error generating file:", error);
