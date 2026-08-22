@@ -1,0 +1,68 @@
+name: Frontend CD
+
+on:
+  workflow_run:
+    workflows:
+      - Frontend CI
+    types:
+      - completed
+
+permissions:
+  actions: read
+  contents: read
+
+concurrency:
+  group: frontend-production
+  cancel-in-progress: false
+
+jobs:
+  deploy-production:
+    name: Deploy production
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_branch == 'main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Validate Netlify configuration
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+        run: |
+          if [ -z "$NETLIFY_AUTH_TOKEN" ] || [ -z "$NETLIFY_SITE_ID" ]; then
+            echo "NETLIFY_AUTH_TOKEN and NETLIFY_SITE_ID must be configured."
+            exit 1
+          fi
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24.19.0
+
+      - name: Download verified production artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          CI_RUN_ID: ${{ github.event.workflow_run.id }}
+          ARTIFACT_NAME: frontend-build-${{ github.event.workflow_run.head_sha }}
+        run: >-
+          gh run download "$CI_RUN_ID"
+          --repo "$REPOSITORY"
+          --name "$ARTIFACT_NAME"
+          --dir build
+
+      - name: Deploy production application to Netlify
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+          DEPLOY_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: >-
+          npx --yes netlify-cli@27.0.1 deploy
+          --dir=build
+          --no-build
+          --prod
+          --site="$NETLIFY_SITE_ID"
+          --auth="$NETLIFY_AUTH_TOKEN"
+          --message="GitHub Actions ${DEPLOY_SHA}"
