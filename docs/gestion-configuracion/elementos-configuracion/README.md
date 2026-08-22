@@ -1,6 +1,6 @@
 # Elementos de configuración del frontend
 
-[Inicio](../README.md) · [Baselines](../baselines/README.md) · [Control de cambios](../control-cambios/README.md) · [Trazabilidad](../trazabilidad/README.md) · [Roles](../roles-responsabilidades/README.md)
+[Inicio](../README.md) · [Baselines](../baselines/README.md) · [Control de cambios](../control-cambios/README.md) · [Trazabilidad](../trazabilidad/README.md) · [Roles](../roles-responsabilidades/README.md) · [Versionado](../versionado-liberaciones/README.md)
 
 Los elementos de configuración (_Configuration Items_, CI) son los artefactos que deben identificarse, versionarse y revisarse porque un cambio incorrecto puede afectar la construcción, el funcionamiento, la presentación o el despliegue de la aplicación.
 
@@ -36,16 +36,16 @@ Los archivos se agrupan cuando comparten propósito y ciclo de cambio. Se separa
 
 | Identificador | Elemento | Contenido o ubicación | Nivel | Estado actual |
 |---|---|---|---|---|
-| `CI-FE-SRC` | Código fuente | [`src/`](../../../src/) | Alto | Versionado; no existe revisión automatizada ni separación formal entre código activo e inactivo. |
+| `CI-FE-SRC` | Código fuente | [`src/`](../../../src/) | Alto | Versionado y verificado mediante Pull Request y CI; conserva código provisional e inactivo identificado en la baseline inicial. |
 | `CI-FE-UI` | Estilos y recursos de presentación | CSS, imágenes, SVG, sonidos y `public/` | Medio | Versionado; sin criterios documentados de validación visual o accesibilidad. |
 | `CI-FE-TPL` | Plantilla de entrada | [`src/assets/sitestemplate.zip`](../../../src/assets/sitestemplate.zip) y esquema interpretado por el lector | Alto | Versionada; su esquema y compatibilidad no están formalizados. |
-| `CI-FE-DEP` | Manifiesto y bloqueo de dependencias | `package.json` y `package-lock.json` | Alto | Versionados; no se declara una versión de Node. |
-| `CI-FE-BLD` | Construcción y ejecución | Scripts, `eslintConfig`, `browserslist`, [`public/index.html`](../../../public/index.html) y [`.gitignore`](../../../.gitignore) | Alto | Usa Create React App; no existe automatización de integración continua. |
-| `CI-FE-TST` | Pruebas y calidad | [`src/App.test.js`](../../../src/App.test.js) y [`src/setupTests.js`](../../../src/setupTests.js) | Alto | La prueba disponible está desactualizada y no representa los flujos actuales. |
-| `CI-FE-CFG` | Ejecución e integraciones externas | URL del backend y parámetros de servicios externos | Alto | Los valores permanecen distribuidos dentro de componentes. |
+| `CI-FE-DEP` | Manifiesto y bloqueo de dependencias | `package.json` y `package-lock.json` | Alto | Versionados; Node y npm están fijados para instalaciones reproducibles. |
+| `CI-FE-BLD` | Construcción y ejecución | Scripts, workflows, `eslintConfig`, `browserslist`, [`public/index.html`](../../../public/index.html) y [`.gitignore`](../../../.gitignore) | Alto | CI verifica y construye las promociones; CD despliega `staging` y `main`. |
+| `CI-FE-TST` | Pruebas y calidad | Pruebas bajo [`src/`](../../../src/) y configuración de Jest | Alto | Las pruebas representativas se ejecutan automáticamente antes de cada promoción. |
+| `CI-FE-CFG` | Ejecución e integraciones externas | URL del backend y configuración de Netlify | Alto | La URL del backend se obtiene por ambiente y los secretos permanecen fuera del repositorio. |
 | `CI-SH-API` | Contrato frontend-backend | Solicitud, respuesta, descarga y tratamiento de errores | Alto | Implementación implícita; sin especificación coordinada ni pruebas de contrato. |
 | `CI-FE-DOC` | Documentación | README y documentación incluida en la aplicación | Medio | Versionada; parte del contenido de usuario continúa siendo provisional. |
-| `CI-FE-REL` | Registros de baseline y liberación | Identificadores de baseline, etiquetas y notas de versión | Alto | Las baselines iniciales están registradas; las etiquetas y notas de liberación no están formalizadas. |
+| `CI-FE-REL` | Registros de baseline y liberación | Identificadores de baseline, etiquetas y notas de versión | Alto | Las baselines iniciales están registradas; el versionado y la publicación de releases están formalizados. |
 
 ## Relaciones principales
 
@@ -65,4 +65,3 @@ Los archivos se agrupan cuando comparten propósito y ciclo de cambio. Se separa
 - Los CI de nivel alto requieren solicitud identificada, análisis de impacto, revisión y pruebas aplicables.
 - Los CI de nivel medio requieren revisión por pares.
 - Un cambio de nivel medio se trata como alto cuando afecta funcionalidad, accesibilidad, datos de entrada o compatibilidad.
-

@@ -5,9 +5,12 @@ on:
     branches:
       - main
       - develop
+      - staging
   push:
     branches:
       - main
+      - develop
+      - staging
   workflow_dispatch:
 
 permissions:

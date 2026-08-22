@@ -1,6 +1,6 @@
 # Roles y responsabilidades
 
-[Inicio](../README.md) · [CI](../elementos-configuracion/README.md) · [Baselines](../baselines/README.md) · [Control de cambios](../control-cambios/README.md) · [Trazabilidad](../trazabilidad/README.md)
+[Inicio](../README.md) · [CI](../elementos-configuracion/README.md) · [Baselines](../baselines/README.md) · [Control de cambios](../control-cambios/README.md) · [Trazabilidad](../trazabilidad/README.md) · [Versionado](../versionado-liberaciones/README.md)
 
 Los roles describen responsabilidades dentro del proceso y no implican cargos exclusivos. Una persona puede asumir más de un rol según el cambio, siempre que se conserve la independencia mínima de revisión.
 
@@ -14,25 +14,29 @@ Los roles describen responsabilidades dentro del proceso y no implican cargos ex
 | Revisor técnico | Evaluar diseño, código, dependencias, configuración, riesgos y mantenibilidad. |
 | Verificador | Confirmar que se ejecutaron las pruebas exigidas y que el resultado satisface los criterios definidos. |
 | Responsable funcional | Evaluar el efecto sobre las capacidades y aceptar los cambios visibles para el usuario. |
+| Responsable de liberación | Autorizar la promoción a `main`, verificar producción y publicar la versión identificada. |
 | Comité de Control de Cambios (CCB) | Decidir sobre cambios de alto impacto, conflictos de prioridad, desviaciones relevantes y modificaciones del contrato compartido. |
 
 ## Matriz RACI
 
 `R` ejecuta la actividad, `A` responde por la decisión final, `C` aporta criterio y `I` recibe información.
 
-| Actividad | Configuración | Solicitante | Desarrollador | Revisor | Verificador | Funcional | CCB |
-|---|---|---|---|---|---|---|---|
-| Registrar la solicitud | C | R | C | I | I | C | I |
-| Identificar CI y baseline afectada | A/R | C | C | C | I | I | I |
-| Analizar impacto y riesgo | C | C | R | C | C | C | A* |
-| Decidir un cambio ordinario | C | I | C | A | C | C | I |
-| Decidir un cambio de alto impacto | C | I | C | C | C | C | A/R |
-| Implementar y documentar | I | I | A/R | C | C | I | I |
-| Revisar técnicamente | I | I | C | A/R | C | I | I |
-| Verificar resultados | I | I | C | C | A/R | C | I |
-| Aceptar impacto funcional | I | C | C | C | C | A/R | I |
-| Integrar y cerrar el cambio | A | I | R | C | C | C | I |
-| Establecer baseline sucesora | A/R | I | C | C | C | C | I |
+| Actividad | Configuración | Solicitante | Desarrollador | Revisor | Verificador | Funcional | Liberación | CCB |
+|---|---|---|---|---|---|---|---|---|
+| Registrar la solicitud | C | R | C | I | I | C | I | I |
+| Identificar CI y baseline afectada | A/R | C | C | C | I | I | C | I |
+| Analizar impacto y riesgo | C | C | R | C | C | C | C | A* |
+| Decidir un cambio ordinario | C | I | C | A | C | C | I | I |
+| Decidir un cambio de alto impacto | C | I | C | C | C | C | C | A/R |
+| Implementar y documentar | I | I | A/R | C | C | I | I | I |
+| Revisar técnicamente | I | I | C | A/R | C | I | I | I |
+| Verificar resultados | I | I | C | C | A/R | C | C | I |
+| Aceptar impacto funcional en `staging` | I | C | C | C | C | A/R | C | I |
+| Promover a `main` y publicar | C | I | R | C | C | C | A/R | I |
+| Integrar y cerrar el cambio | A | I | R | C | C | C | C | I |
+| Establecer baseline sucesora | A/R | I | C | C | C | C | C | I |
+
+La promoción `develop -> staging -> main` requiere evidencia del CI en cada transición. El responsable funcional acepta el candidato en `staging` y el responsable de liberación autoriza el paso final a producción.
 
 `A*` corresponde al CCB solamente cuando el impacto, el riesgo o la dependencia compartida justifican su intervención; en los demás casos la decisión se mantiene en la revisión ordinaria.
 

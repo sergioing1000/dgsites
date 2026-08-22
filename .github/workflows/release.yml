@@ -1,0 +1,96 @@
+name: Frontend Release
+
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: frontend-release-${{ github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  verify-and-release:
+    name: Verify and publish release
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Validate release reference
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          pattern='^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$'
+          if [[ ! "$RELEASE_TAG" =~ $pattern ]]; then
+            echo "The tag must use Semantic Versioning: vMAJOR.MINOR.PATCH"
+            exit 1
+          fi
+
+          package_version="$(node -p "require('./package.json').version")"
+          lock_version="$(node -p "require('./package-lock.json').version")"
+          tag_version="${RELEASE_TAG#v}"
+
+          if [[ "$tag_version" != "$package_version" ]]; then
+            echo "Tag version $tag_version does not match package.json $package_version."
+            exit 1
+          fi
+
+          if [[ "$package_version" != "$lock_version" ]]; then
+            echo "package.json and package-lock.json must declare the same version."
+            exit 1
+          fi
+
+          release_commit="$(git rev-list -n 1 "$RELEASE_TAG")"
+          if ! git merge-base --is-ancestor "$release_commit" origin/main; then
+            echo "The release commit must belong to main."
+            exit 1
+          fi
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Run tests
+        run: npm run test:ci
+        env:
+          CI: true
+
+      - name: Build production application
+        run: npm run build
+        env:
+          CI: true
+          REACT_APP_API_BASE_URL: ${{ vars.REACT_APP_API_BASE_URL }}
+
+      - name: Package release artifact
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          archive="dgsites-frontend-${RELEASE_TAG}.tar.gz"
+          tar -czf "$archive" -C build .
+          sha256sum "$archive" > "${archive}.sha256"
+
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: >-
+          gh release create "$RELEASE_TAG"
+          "dgsites-frontend-${RELEASE_TAG}.tar.gz"
+          "dgsites-frontend-${RELEASE_TAG}.tar.gz.sha256"
+          --verify-tag
+          --generate-notes
+          --title "DGSITES Frontend ${RELEASE_TAG}"
