@@ -33,7 +33,7 @@ Una solicitud puede no afectar una capacidad funcional, pero siempre debe relaci
 | Commits | Identificar exactamente las modificaciones. |
 | Pruebas y resultado | Demostrar la verificación ejecutada. |
 | Revisor y verificador | Registrar las responsabilidades ejercidas. |
-| Commit integrado | Fijar el estado que llegó a `master`. |
+| Commit integrado | Fijar el estado que llegó a `main`. |
 | Baseline | Relacionar la nueva referencia cuando corresponda. |
 | Estado | Mostrar si la solicitud está en análisis, aprobada, en implementación, integrada, rechazada o cerrada. |
 
@@ -70,4 +70,4 @@ Una solicitud puede cerrarse cuando:
 
 ## Contabilidad del estado
 
-El estado vigente se obtiene a partir del último commit integrado en `master`, las solicitudes cerradas, las baselines establecidas y sus desviaciones conocidas. El registro no reemplaza el historial de Git: lo complementa con la justificación, la decisión y la evidencia que el historial por sí solo no expresa.
+El estado vigente se obtiene a partir del último commit integrado en `main`, las solicitudes cerradas, las baselines establecidas y sus desviaciones conocidas. El registro no reemplaza el historial de Git: lo complementa con la justificación, la decisión y la evidencia que el historial por sí solo no expresa.
