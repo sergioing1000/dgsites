@@ -1,96 +1,145 @@
 name: Frontend Release
 
 on:
-  push:
-    tags:
-      - "v[0-9]+.[0-9]+.[0-9]+"
+  workflow_call:
+    inputs:
+      ci_run_id:
+        description: GitHub Actions run that produced the verified artifact
+        required: true
+        type: number
+      commit_sha:
+        description: Revision deployed to production
+        required: true
+        type: string
 
 permissions:
+  actions: read
   contents: write
 
-concurrency:
-  group: frontend-release-${{ github.ref_name }}
-  cancel-in-progress: false
-
 jobs:
-  verify-and-release:
-    name: Verify and publish release
+  tag:
+    name: Create release tag
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 5
+    outputs:
+      new_version: ${{ steps.version.outputs.new_version }}
 
     steps:
-      - name: Check out repository
+      - name: Check out deployed revision
         uses: actions/checkout@v7
         with:
           fetch-depth: 0
+          ref: ${{ inputs.commit_sha }}
 
-      - name: Validate release reference
-        env:
-          RELEASE_TAG: ${{ github.ref_name }}
+      - name: Generate version tag
+        id: version
         run: |
-          pattern='^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$'
-          if [[ ! "$RELEASE_TAG" =~ $pattern ]]; then
-            echo "The tag must use Semantic Versioning: vMAJOR.MINOR.PATCH"
-            exit 1
+          set -euo pipefail
+          LAST_TAG=$(git tag --merged HEAD --sort=-v:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -n 1 || true)
+
+          if [[ -z "$LAST_TAG" ]]; then
+            PACKAGE_VERSION=$(node -p "require('./package.json').version")
+            NEW_VERSION="v${PACKAGE_VERSION}"
+            echo "No previous release tag found; first release will be ${NEW_VERSION}."
+          else
+            TAG_COMMIT=$(git rev-list -n 1 "$LAST_TAG")
+            HEAD_COMMIT=$(git rev-parse HEAD)
+
+            if [[ "$TAG_COMMIT" == "$HEAD_COMMIT" ]]; then
+              NEW_VERSION="$LAST_TAG"
+              echo "Tag ${LAST_TAG} already identifies the deployed revision; reusing it."
+            else
+              COMMITS=$(git log "${LAST_TAG}..HEAD" --format=%s)
+              IFS='.' read -r MAJOR MINOR PATCH <<< "${LAST_TAG#v}"
+
+              if grep -Eq '^feat(\([^)]*\))?!?:' <<< "$COMMITS"; then
+                MINOR=$((MINOR + 1))
+                PATCH=0
+              else
+                PATCH=$((PATCH + 1))
+              fi
+
+              NEW_VERSION="v${MAJOR}.${MINOR}.${PATCH}"
+            fi
           fi
 
-          package_version="$(node -p "require('./package.json').version")"
-          lock_version="$(node -p "require('./package-lock.json').version")"
-          tag_version="${RELEASE_TAG#v}"
+          echo "new_version=${NEW_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "Release tag: ${NEW_VERSION}"
 
-          if [[ "$tag_version" != "$package_version" ]]; then
-            echo "Tag version $tag_version does not match package.json $package_version."
-            exit 1
-          fi
-
-          if [[ "$package_version" != "$lock_version" ]]; then
-            echo "package.json and package-lock.json must declare the same version."
-            exit 1
-          fi
-
-          release_commit="$(git rev-list -n 1 "$RELEASE_TAG")"
-          if ! git merge-base --is-ancestor "$release_commit" origin/main; then
-            echo "The release commit must belong to main."
-            exit 1
-          fi
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version-file: .nvmrc
-          cache: npm
-          cache-dependency-path: package-lock.json
-
-      - name: Install dependencies
-        run: npm ci --no-audit --no-fund
-
-      - name: Run tests
-        run: npm run test:ci
+      - name: Create and push tag
         env:
-          CI: true
+          NEW_VERSION: ${{ steps.version.outputs.new_version }}
+        run: |
+          set -euo pipefail
 
-      - name: Build production application
-        run: npm run build
+          if git rev-parse "$NEW_VERSION" >/dev/null 2>&1; then
+            TAG_COMMIT=$(git rev-list -n 1 "$NEW_VERSION")
+            HEAD_COMMIT=$(git rev-parse HEAD)
+
+            if [[ "$TAG_COMMIT" == "$HEAD_COMMIT" ]]; then
+              echo "Tag ${NEW_VERSION} already points to the deployed revision."
+              exit 0
+            fi
+
+            echo "::error::Tag ${NEW_VERSION} already points to another revision."
+            exit 1
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -a "$NEW_VERSION" -m "DGSITES Frontend ${NEW_VERSION}"
+          git push origin "$NEW_VERSION"
+
+  release:
+    name: Publish GitHub Release
+    needs: tag
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Download verified production artifact
         env:
-          CI: true
-          REACT_APP_API_BASE_URL: ${{ vars.REACT_APP_API_BASE_URL }}
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          CI_RUN_ID: ${{ inputs.ci_run_id }}
+          ARTIFACT_NAME: frontend-build-${{ inputs.commit_sha }}
+        run: >-
+          gh run download "$CI_RUN_ID"
+          --repo "$REPOSITORY"
+          --name "$ARTIFACT_NAME"
+          --dir build
 
       - name: Package release artifact
         env:
-          RELEASE_TAG: ${{ github.ref_name }}
+          RELEASE_TAG: ${{ needs.tag.outputs.new_version }}
         run: |
-          archive="dgsites-frontend-${RELEASE_TAG}.tar.gz"
-          tar -czf "$archive" -C build .
-          sha256sum "$archive" > "${archive}.sha256"
+          set -euo pipefail
+          ARCHIVE="dgsites-frontend-${RELEASE_TAG}.tar.gz"
+          tar -czf "$ARCHIVE" -C build .
+          sha256sum "$ARCHIVE" > "${ARCHIVE}.sha256"
 
       - name: Publish GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
-          RELEASE_TAG: ${{ github.ref_name }}
-        run: >-
-          gh release create "$RELEASE_TAG"
-          "dgsites-frontend-${RELEASE_TAG}.tar.gz"
-          "dgsites-frontend-${RELEASE_TAG}.tar.gz.sha256"
-          --verify-tag
-          --generate-notes
-          --title "DGSITES Frontend ${RELEASE_TAG}"
+          REPOSITORY: ${{ github.repository }}
+          RELEASE_TAG: ${{ needs.tag.outputs.new_version }}
+        run: |
+          set -euo pipefail
+          ARCHIVE="dgsites-frontend-${RELEASE_TAG}.tar.gz"
+
+          if gh release view "$RELEASE_TAG" --repo "$REPOSITORY" >/dev/null 2>&1; then
+            gh release upload "$RELEASE_TAG" \
+              "$ARCHIVE" \
+              "${ARCHIVE}.sha256" \
+              --repo "$REPOSITORY" \
+              --clobber
+            echo "Release ${RELEASE_TAG} already exists; its artifacts were refreshed."
+          else
+            gh release create "$RELEASE_TAG" \
+              "$ARCHIVE" \
+              "${ARCHIVE}.sha256" \
+              --repo "$REPOSITORY" \
+              --verify-tag \
+              --generate-notes \
+              --title "DGSITES Frontend ${RELEASE_TAG}"
+          fi
