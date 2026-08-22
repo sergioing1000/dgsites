@@ -32,7 +32,7 @@ flowchart TD
     G --> H["Crear Pull Request"]
     H --> I["Revisión técnica y verificación"]
     I -->|Requiere ajustes| F
-    I -->|Aceptada| J["Integrar en master"]
+    I -->|Aceptada| J["Integrar en main"]
     J --> K["Actualizar registro de trazabilidad"]
     K --> L{"¿Cambia una baseline?"}
     L -->|No| M["Cerrar solicitud"]
@@ -49,7 +49,7 @@ flowchart TD
 | Solicitudes de cambio | Identificador `CR-FE-###` y datos obligatorios | Definido documentalmente |
 | Revisión de cambios | Pull Request, revisión y pruebas aplicables | Definido documentalmente |
 | Trazabilidad | Relación entre solicitud, CI, commits, pruebas y baseline | Definida documentalmente |
-| Protección de rama | Restricciones de integración sobre `master` | Pendiente de habilitar |
+| Protección de rama | Restricciones de integración sobre `main` | Habilitada con una aprobación requerida |
 | Pruebas representativas | Evidencia de los flujos funcionales críticos | Pendiente |
 | Configuración por ambiente | Valores externos centralizados y documentados | Pendiente |
 | Contrato compartido | Especificación y pruebas coordinadas | Pendiente con el backend |
@@ -75,4 +75,3 @@ Antes de establecer una baseline sucesora se debe comprobar que:
 - Las pruebas exigidas fueron ejecutadas y sus resultados están registrados.
 - La documentación refleja el comportamiento y la configuración resultantes.
 - Los cambios del contrato compartido tienen una referencia coordinada con el backend.
-

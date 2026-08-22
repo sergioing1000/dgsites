@@ -30,11 +30,11 @@ Cada cambio se registra con el formato `CR-FE-###`, donde el número es consecut
 2. Relacionar las capacidades, los CI y las dependencias afectadas.
 3. Analizar impacto, riesgo, pruebas necesarias y estrategia de reversión.
 4. Aprobar, rechazar o solicitar ajustes antes de la implementación.
-5. Crear una rama desde `master` e incluir el identificador en su nombre.
+5. Crear una rama desde `main` e incluir el identificador en su nombre.
 6. Implementar el cambio y actualizar las pruebas y la documentación aplicables.
 7. Crear un Pull Request que enlace la solicitud y presente las evidencias.
 8. Ejecutar la revisión técnica y la verificación requeridas por el nivel de control.
-9. Integrar el cambio en `master` únicamente cuando cumpla los criterios de aceptación.
+9. Integrar el cambio en `main` únicamente cuando cumpla los criterios de aceptación.
 10. Actualizar la trazabilidad, establecer una baseline sucesora si corresponde y cerrar la solicitud.
 
 ## Convención de ramas
@@ -45,7 +45,7 @@ Cada cambio se registra con el formato `CR-FE-###`, donde el número es consecut
 | Corrección | `fix/CR-FE-###-descripcion` | `fix/CR-FE-013-validacion-fechas` |
 | Corrección urgente | `hotfix/CR-FE-###-descripcion` | `hotfix/CR-FE-014-error-descarga` |
 
-La rama estable del repositorio es `master`. Los cambios se integran mediante Pull Request; la rama de trabajo no sustituye la solicitud ni la evidencia del cambio.
+La rama estable del repositorio es `main`. Los cambios se integran mediante Pull Request; la rama de trabajo no sustituye la solicitud ni la evidencia del cambio.
 
 ## Nivel de revisión
 

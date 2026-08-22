@@ -20,7 +20,7 @@ El número es consecutivo e inmutable. Un cambio que requiera actualizar `BL-FE-
 | Identificador | Estado | Referencia | Alcance |
 |---|---|---|---|
 | `BL-FE-FUN-001` | Establecida | Comportamiento fijado en `474f33c` | Capacidades funcionales actuales, incluidas las parciales o provisionales. |
-| `BL-FE-DEV-001` | Establecida con desviaciones conocidas | Commit `474f33c543fc00252eb24993b01d7c322dae7322` de `master` | CI que constituyen el punto de partida para desarrollar y verificar cambios. |
+| `BL-FE-DEV-001` | Establecida con desviaciones conocidas | Commit `474f33c543fc00252eb24993b01d7c322dae7322` de `main` | CI que constituyen el punto de partida para desarrollar y verificar cambios. |
 
 ## `BL-FE-FUN-001`
 
@@ -77,4 +77,3 @@ Se establece una baseline sucesora ante:
 - Un cambio de estructura de la plantilla Excel.
 - La centralización o modificación de la configuración por ambiente.
 - Una corrección que altere resultados, validaciones o tratamiento de errores.
-
