@@ -9,6 +9,7 @@ Esta documentación establece cómo se identifican, versionan, revisan y trazan 
 3. [Control de cambios](control-cambios/README.md)
 4. [Trazabilidad](trazabilidad/README.md)
 5. [Roles y responsabilidades](roles-responsabilidades/README.md)
+6. [Versionado y liberaciones](versionado-liberaciones/README.md)
 
 ## Principios
 
@@ -50,10 +51,11 @@ flowchart TD
 | Revisión de cambios | Pull Request, revisión y pruebas aplicables | Definido documentalmente |
 | Trazabilidad | Relación entre solicitud, CI, commits, pruebas y baseline | Definida documentalmente |
 | Protección de rama | Restricciones de integración sobre `main` | Habilitada con una aprobación requerida |
+| Versionado y liberación | Versión de los manifiestos, tags y GitHub Releases | Automatización definida para tags semánticos |
 | Pruebas representativas | Evidencia de los flujos funcionales críticos | Pendiente |
 | Configuración por ambiente | Valores externos centralizados y documentados | Pendiente |
 | Contrato compartido | Especificación y pruebas coordinadas | Pendiente con el backend |
-| Automatización | Verificación automática de pruebas y construcción | Pendiente |
+| Automatización | Verificación, construcción, despliegue y liberación mediante GitHub Actions | Implementada |
 
 ## Contabilidad del estado de configuración
 

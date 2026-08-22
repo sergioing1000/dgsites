@@ -1,6 +1,6 @@
 # Control de cambios del frontend
 
-[Inicio](../README.md) · [CI](../elementos-configuracion/README.md) · [Baselines](../baselines/README.md) · [Trazabilidad](../trazabilidad/README.md) · [Roles](../roles-responsabilidades/README.md)
+[Inicio](../README.md) · [CI](../elementos-configuracion/README.md) · [Baselines](../baselines/README.md) · [Trazabilidad](../trazabilidad/README.md) · [Roles](../roles-responsabilidades/README.md) · [Versionado](../versionado-liberaciones/README.md)
 
 Este proceso controla los cambios realizados sobre los elementos de configuración del frontend. Su objetivo es que cada modificación tenga una justificación, una decisión explícita, revisión proporcional al riesgo y evidencia suficiente para reconstruir lo ocurrido.
 

@@ -1,6 +1,6 @@
 # Roles y responsabilidades
 
-[Inicio](../README.md) · [CI](../elementos-configuracion/README.md) · [Baselines](../baselines/README.md) · [Control de cambios](../control-cambios/README.md) · [Trazabilidad](../trazabilidad/README.md)
+[Inicio](../README.md) · [CI](../elementos-configuracion/README.md) · [Baselines](../baselines/README.md) · [Control de cambios](../control-cambios/README.md) · [Trazabilidad](../trazabilidad/README.md) · [Versionado](../versionado-liberaciones/README.md)
 
 Los roles describen responsabilidades dentro del proceso y no implican cargos exclusivos. Una persona puede asumir más de un rol según el cambio, siempre que se conserve la independencia mínima de revisión.
 

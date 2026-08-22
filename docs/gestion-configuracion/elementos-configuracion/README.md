@@ -1,6 +1,6 @@
 # Elementos de configuración del frontend
 
-[Inicio](../README.md) · [Baselines](../baselines/README.md) · [Control de cambios](../control-cambios/README.md) · [Trazabilidad](../trazabilidad/README.md) · [Roles](../roles-responsabilidades/README.md)
+[Inicio](../README.md) · [Baselines](../baselines/README.md) · [Control de cambios](../control-cambios/README.md) · [Trazabilidad](../trazabilidad/README.md) · [Roles](../roles-responsabilidades/README.md) · [Versionado](../versionado-liberaciones/README.md)
 
 Los elementos de configuración (_Configuration Items_, CI) son los artefactos que deben identificarse, versionarse y revisarse porque un cambio incorrecto puede afectar la construcción, el funcionamiento, la presentación o el despliegue de la aplicación.
 
@@ -45,7 +45,7 @@ Los archivos se agrupan cuando comparten propósito y ciclo de cambio. Se separa
 | `CI-FE-CFG` | Ejecución e integraciones externas | URL del backend y parámetros de servicios externos | Alto | Los valores permanecen distribuidos dentro de componentes. |
 | `CI-SH-API` | Contrato frontend-backend | Solicitud, respuesta, descarga y tratamiento de errores | Alto | Implementación implícita; sin especificación coordinada ni pruebas de contrato. |
 | `CI-FE-DOC` | Documentación | README y documentación incluida en la aplicación | Medio | Versionada; parte del contenido de usuario continúa siendo provisional. |
-| `CI-FE-REL` | Registros de baseline y liberación | Identificadores de baseline, etiquetas y notas de versión | Alto | Las baselines iniciales están registradas; las etiquetas y notas de liberación no están formalizadas. |
+| `CI-FE-REL` | Registros de baseline y liberación | Identificadores de baseline, etiquetas y notas de versión | Alto | Las baselines iniciales están registradas; el versionado y la publicación de releases están formalizados. |
 
 ## Relaciones principales
 
@@ -65,4 +65,3 @@ Los archivos se agrupan cuando comparten propósito y ciclo de cambio. Se separa
 - Los CI de nivel alto requieren solicitud identificada, análisis de impacto, revisión y pruebas aplicables.
 - Los CI de nivel medio requieren revisión por pares.
 - Un cambio de nivel medio se trata como alto cuando afecta funcionalidad, accesibilidad, datos de entrada o compatibilidad.
-

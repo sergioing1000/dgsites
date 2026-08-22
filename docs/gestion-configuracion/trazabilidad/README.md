@@ -1,6 +1,6 @@
 # Trazabilidad de la configuración del frontend
 
-[Inicio](../README.md) · [CI](../elementos-configuracion/README.md) · [Baselines](../baselines/README.md) · [Control de cambios](../control-cambios/README.md) · [Roles](../roles-responsabilidades/README.md)
+[Inicio](../README.md) · [CI](../elementos-configuracion/README.md) · [Baselines](../baselines/README.md) · [Control de cambios](../control-cambios/README.md) · [Roles](../roles-responsabilidades/README.md) · [Versionado](../versionado-liberaciones/README.md)
 
 La trazabilidad permite reconstruir por qué se realizó un cambio, qué elementos modificó, quién lo revisó, cómo se verificó y en qué configuración quedó incorporado.
 

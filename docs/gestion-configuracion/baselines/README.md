@@ -1,6 +1,6 @@
 # Baselines del frontend
 
-[Inicio](../README.md) · [CI](../elementos-configuracion/README.md) · [Control de cambios](../control-cambios/README.md) · [Trazabilidad](../trazabilidad/README.md) · [Roles](../roles-responsabilidades/README.md)
+[Inicio](../README.md) · [CI](../elementos-configuracion/README.md) · [Control de cambios](../control-cambios/README.md) · [Trazabilidad](../trazabilidad/README.md) · [Roles](../roles-responsabilidades/README.md) · [Versionado](../versionado-liberaciones/README.md)
 
 Una baseline es una configuración identificada y establecida que sirve como referencia para desarrollar y verificar cambios posteriores. Una vez establecida, sus elementos no se modifican directamente: un cambio controlado origina una nueva versión cuando corresponde.
 
