@@ -11,6 +11,7 @@ assignees: ""
 - Identificador: `CR-FE-###`
 - Solicitante:
 - Fecha:
+- Rama inicial prevista: `develop` / `main` para hotfix
 
 ## Descripción y justificación
 
@@ -22,6 +23,7 @@ assignees: ""
 - Elementos de configuración afectados:
 - Dependencias:
 - Riesgos:
+- Impacto sobre versión o baseline:
 
 ## Verificación
 

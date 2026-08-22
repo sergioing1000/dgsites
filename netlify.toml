@@ -1,4 +1,7 @@
-# GitHub Actions publishes the verified production artifact.
-# Netlify remains connected to provide Deploy Previews for pull requests.
+# GitHub Actions publishes verified artifacts for staging and production.
+# Netlify remains connected only to provide Deploy Previews for pull requests.
 [context.production]
+  ignore = "exit 0"
+
+[context.branch-deploy]
   ignore = "exit 0"

@@ -12,8 +12,11 @@ Se utiliza el esquema `BL-FE-<TIPO>-<NÚMERO>`:
 |---|---|---|
 | `FUN` | Funcional | Fijar las capacidades y el comportamiento controlado. |
 | `DEV` | Desarrollo | Fijar código, dependencias, configuración, pruebas y documentación como punto de partida. |
+| `PROD` | Producto | Fijar una versión desplegada mediante commit de `main`, tag y GitHub Release. |
 
 El número es consecutivo e inmutable. Un cambio que requiera actualizar `BL-FE-DEV-001` producirá `BL-FE-DEV-002`, sin reemplazar la referencia histórica anterior.
+
+Una baseline `DEV` puede corresponder a una referencia aceptada en `develop`. Una baseline `PROD` se establece solamente después de promover el candidato por `staging`, integrarlo en `main`, verificar el despliegue y publicar su tag. Todavía no se ha establecido una baseline productiva con tag.
 
 ## Baselines establecidas
 
@@ -77,3 +80,4 @@ Se establece una baseline sucesora ante:
 - Un cambio de estructura de la plantilla Excel.
 - La centralización o modificación de la configuración por ambiente.
 - Una corrección que altere resultados, validaciones o tratamiento de errores.
+- La publicación de una versión productiva identificada mediante tag.

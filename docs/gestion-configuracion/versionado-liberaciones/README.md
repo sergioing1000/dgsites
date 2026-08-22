@@ -20,18 +20,21 @@ Cada liberación utiliza un tag firmado con el formato `vMAJOR.MINOR.PATCH`, por
 
 - coincidir con la versión de `package.json` y `package-lock.json`;
 - señalar un commit integrado en `main`;
-- crearse después de que CI y el despliegue de ese commit finalicen correctamente;
+- representar un cambio promovido previamente por `develop` y `staging`;
+- crearse después de que CI y el despliegue productivo de ese commit finalicen correctamente;
 - conservarse como referencia inmutable de la liberación.
 
 ## Procedimiento
 
 1. Determinar el incremento según el alcance aprobado.
 2. Actualizar los manifiestos sin crear el tag: `npm version MAJOR.MINOR.PATCH --no-git-tag-version`.
-3. Integrar el cambio mediante Pull Request y esperar resultados satisfactorios de CI y CD.
-4. Crear el tag firmado sobre el commit integrado: `git tag -s vMAJOR.MINOR.PATCH -m "DGSITES Frontend vMAJOR.MINOR.PATCH"`.
-5. Publicar el tag: `git push origin vMAJOR.MINOR.PATCH`.
-6. Verificar que el workflow `Frontend Release` publique la GitHub Release.
-7. Registrar la versión, el commit, la baseline y las evidencias en la trazabilidad.
+3. Integrar el cambio en `develop` mediante Pull Request y esperar un CI satisfactorio.
+4. Promover `develop` hacia `staging` y validar el despliegue de preproducción.
+5. Promover `staging` hacia `main` y verificar CI y el despliegue productivo.
+6. Crear el tag firmado sobre el commit integrado: `git tag -s vMAJOR.MINOR.PATCH -m "DGSITES Frontend vMAJOR.MINOR.PATCH"`.
+7. Publicar el tag: `git push origin vMAJOR.MINOR.PATCH`.
+8. Verificar que el workflow `Frontend Release` publique la GitHub Release.
+9. Registrar la versión, el commit, las promociones, la baseline y las evidencias en la trazabilidad.
 
 El workflow vuelve a instalar las dependencias, ejecutar las pruebas y construir la aplicación. Si las verificaciones son satisfactorias, publica las notas generadas, el artefacto comprimido y su suma SHA-256.
 
@@ -41,7 +44,8 @@ El registro de una liberación debe incluir:
 
 - versión y tag firmado;
 - commit de `main` y Pull Request asociado;
-- ejecución satisfactoria de CI, CD y `Frontend Release`;
+- Pull Requests de promoción entre `develop`, `staging` y `main`;
+- ejecución satisfactoria de CI, despliegues y `Frontend Release`;
 - enlace a la GitHub Release;
 - artefacto y suma SHA-256;
 - baseline sucesora, cuando corresponda;

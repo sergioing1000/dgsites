@@ -3,6 +3,12 @@
 - Identificador: `CR-FE-###`
 - Solicitud relacionada:
 
+## Flujo Git
+
+- Rama de origen:
+- Rama de destino:
+- Tipo: implementación / promoción / hotfix / sincronización
+
 ## Resumen
 
 <!-- Describe brevemente el cambio y su justificación. -->
@@ -33,3 +39,4 @@ Resultados y evidencias:
 - [ ] Las pruebas aplicables fueron ejecutadas.
 - [ ] La documentación o configuración afectada fue actualizada.
 - [ ] Se solicitó revisión a otra persona.
+- [ ] La transición de ramas cumple `develop -> staging -> main` o el flujo de hotfix.

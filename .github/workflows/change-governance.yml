@@ -29,6 +29,41 @@ jobs:
             exit 1
           fi
 
+      - name: Validate Git Flow transition
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          BASE_BRANCH: ${{ github.event.pull_request.base.ref }}
+          HEAD_BRANCH: ${{ github.event.pull_request.head.ref }}
+        run: |
+          if [[ "$BASE_BRANCH" == "main" && \
+                "$HEAD_BRANCH" == "feature/CR-FE-004-versionado-liberacion" ]]; then
+            if ! gh api "/repos/${REPOSITORY}/branches/develop" >/dev/null 2>&1 || \
+               ! gh api "/repos/${REPOSITORY}/branches/staging" >/dev/null 2>&1; then
+              echo "Allowing the Git Flow bootstrap pull request."
+              exit 0
+            fi
+          fi
+
+          valid_transition=0
+
+          case "${BASE_BRANCH}:${HEAD_BRANCH}" in
+            develop:feature/CR-FE-[0-9][0-9][0-9]-* | \
+            develop:fix/CR-FE-[0-9][0-9][0-9]-* | \
+            develop:main | \
+            staging:develop | \
+            main:staging | \
+            main:hotfix/CR-FE-[0-9][0-9][0-9]-*)
+              valid_transition=1
+              ;;
+          esac
+
+          if (( valid_transition == 0 )); then
+            echo "Invalid Git Flow transition: ${HEAD_BRANCH} -> ${BASE_BRANCH}"
+            echo "Allowed transitions: feature/fix -> develop, develop -> staging, staging -> main, hotfix -> main, and main -> develop for synchronization."
+            exit 1
+          fi
+
       - name: Validate commit messages
         env:
           GH_TOKEN: ${{ github.token }}
@@ -36,6 +71,7 @@ jobs:
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
           pattern='^(feat|fix|docs|style|refactor|test|build|ci|chore|revert)(\([a-zA-Z0-9._/-]+\))?!?: .+'
+          merge_pattern='^Merge pull request #[0-9]+ from .+'
           mapfile -t messages < <(
             gh api --paginate "/repos/${REPOSITORY}/pulls/${PR_NUMBER}/commits" \
               --jq '.[].commit.message | split("\n")[0]'
@@ -48,7 +84,7 @@ jobs:
 
           invalid=0
           for message in "${messages[@]}"; do
-            if [[ ! "$message" =~ $pattern ]]; then
+            if [[ ! "$message" =~ $pattern && ! "$message" =~ $merge_pattern ]]; then
               echo "Invalid commit message: $message"
               invalid=1
             fi

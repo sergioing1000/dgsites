@@ -33,12 +33,16 @@ flowchart TD
     G --> H["Crear Pull Request"]
     H --> I["Revisión técnica y verificación"]
     I -->|Requiere ajustes| F
-    I -->|Aceptada| J["Integrar en main"]
-    J --> K["Actualizar registro de trazabilidad"]
-    K --> L{"¿Cambia una baseline?"}
-    L -->|No| M["Cerrar solicitud"]
-    L -->|Sí| N["Establecer baseline sucesora"]
-    N --> M
+    I -->|Aceptada| J["Integrar en develop"]
+    J --> K["Promover a staging"]
+    K --> L["Validar en preproducción"]
+    L -->|Requiere ajustes| F
+    L -->|Aceptada| M["Promover a main"]
+    M --> N["Desplegar producción y actualizar trazabilidad"]
+    N --> O{"¿Cambia una baseline?"}
+    O -->|No| P["Cerrar solicitud"]
+    O -->|Sí| Q["Establecer baseline sucesora"]
+    Q --> P
 ```
 
 ## Controles de la estrategia
@@ -50,10 +54,11 @@ flowchart TD
 | Solicitudes de cambio | Identificador `CR-FE-###` y datos obligatorios | Definido documentalmente |
 | Revisión de cambios | Pull Request, revisión y pruebas aplicables | Definido documentalmente |
 | Trazabilidad | Relación entre solicitud, CI, commits, pruebas y baseline | Definida documentalmente |
-| Protección de rama | Restricciones de integración sobre `main` | Habilitada con una aprobación requerida |
+| Branching | Promoción controlada `develop -> staging -> main` | Definida; ramas de promoción pendientes de inicialización |
+| Protección de rama | Pull Request, aprobación y verificaciones sobre ramas permanentes | `main` protegida; `develop` y `staging` se habilitan después de su creación |
 | Versionado y liberación | Versión de los manifiestos, tags y GitHub Releases | Automatización definida para tags semánticos |
-| Pruebas representativas | Evidencia de los flujos funcionales críticos | Pendiente |
-| Configuración por ambiente | Valores externos centralizados y documentados | Pendiente |
+| Pruebas representativas | Suite automatizada ejecutada por CI | Implementación inicial establecida |
+| Configuración por ambiente | Variable de API, secretos y contextos de Netlify | Implementada para integración, preproducción y producción |
 | Contrato compartido | Especificación y pruebas coordinadas | Pendiente con el backend |
 | Automatización | Verificación, construcción, despliegue y liberación mediante GitHub Actions | Implementada |
 
@@ -64,7 +69,8 @@ La información necesaria para reconstruir el estado de un cambio se distribuye 
 - El inventario de CI y las baselines de esta documentación.
 - La solicitud de cambio y su decisión.
 - La rama, el Pull Request y los commits asociados.
-- Las evidencias de prueba y revisión.
+- Las promociones entre `develop`, `staging` y `main`.
+- Las evidencias de prueba, revisión y despliegue por ambiente.
 - El registro de trazabilidad actualizado al cerrar el cambio.
 
 ## Auditoría

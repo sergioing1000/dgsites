@@ -11,12 +11,15 @@ flowchart LR
     A["Solicitud CR-FE-###"] --> B["Capacidad FUN-FE-##"]
     A --> C["CI afectados"]
     A --> D["Rama"]
-    D --> E["Pull Request"]
+    D --> E["PR hacia develop"]
     E --> F["Commits"]
     E --> G["Pruebas y revisión"]
-    F --> H["Commit integrado"]
+    F --> H["PR develop hacia staging"]
     G --> H
-    H --> I["Baseline sucesora, si aplica"]
+    H --> I["Despliegue de preproducción"]
+    I --> J["PR staging hacia main"]
+    J --> K["Despliegue productivo"]
+    K --> L["Tag, release y baseline, si aplica"]
 ```
 
 Una solicitud puede no afectar una capacidad funcional, pero siempre debe relacionarse al menos con un CI. La baseline se registra solamente cuando el cambio establece una nueva referencia controlada.
@@ -30,8 +33,10 @@ Una solicitud puede no afectar una capacidad funcional, pero siempre debe relaci
 | CI | Delimitar los artefactos bajo control. |
 | Rama | Ubicar el trabajo realizado. |
 | Pull Request | Conservar discusión, aprobación y evidencia de integración. |
+| Promociones | Relacionar los Pull Requests `develop -> staging -> main`. |
 | Commits | Identificar exactamente las modificaciones. |
 | Pruebas y resultado | Demostrar la verificación ejecutada. |
+| Despliegues | Conservar la ejecución y el resultado de preproducción y producción. |
 | Revisor y verificador | Registrar las responsabilidades ejercidas. |
 | Commit integrado | Fijar el estado que llegó a `main`. |
 | Baseline | Relacionar la nueva referencia cuando corresponda. |
@@ -41,7 +46,7 @@ Una solicitud puede no afectar una capacidad funcional, pero siempre debe relaci
 
 La siguiente tabla se completa al gestionar cambios reales; no se registran identificadores ni evidencias ficticias.
 
-| Solicitud | Capacidades | CI | Rama / Pull Request | Commits | Pruebas | Baseline | Estado |
+| Solicitud | Capacidades | CI | Rama / Pull Requests | Commits | Pruebas y despliegues | Versión / Baseline | Estado |
 |---|---|---|---|---|---|---|---|
 | _Por registrar_ | — | — | — | — | — | — | — |
 
