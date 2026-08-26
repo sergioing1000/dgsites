@@ -24,7 +24,31 @@ Este proyecto es una aplicación en React que permite:
 
 ## 🧑‍💻 Instalación y ejecución local
 
-https://solar-sergioapp.netlify.app/
+Requisitos: Node.js 24 y npm 11.
+
+```bash
+npm ci
+npm run dev
+```
+
+La URL del backend se configura en un archivo `.env` local:
+
+```dotenv
+VITE_API_BASE_URL=https://wind-data-api-production.up.railway.app
+```
+
+Comandos de verificación:
+
+```bash
+npm run test:ci
+npm run test:coverage
+npm run build
+npm run preview
+```
+
+Vite genera el artefacto de producción en `dist`. GitHub Actions usa esa misma carpeta para staging y producción; Netlify la utiliza para las vistas previas de los Pull Requests.
+
+Aplicación publicada: https://solar-sergioapp.netlify.app/
 
 ---
 

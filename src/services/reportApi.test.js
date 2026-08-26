@@ -6,8 +6,8 @@ import {
   requestReport,
 } from "./reportApi";
 
-jest.mock("axios", () => ({
-  post: jest.fn(),
+vi.mock("axios", () => ({
+  default: { post: vi.fn() },
 }));
 
 beforeEach(() => {

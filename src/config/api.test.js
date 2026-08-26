@@ -16,22 +16,17 @@ test("resolves a download path against the backend URL", () => {
   );
 });
 
-test("uses the backend URL configured for the environment", () => {
-  const previousApiBaseUrl = process.env.REACT_APP_API_BASE_URL;
-  process.env.REACT_APP_API_BASE_URL = "https://api.example.com/";
-  jest.resetModules();
+test("uses the backend URL configured for the environment", async () => {
+  vi.stubEnv("VITE_API_BASE_URL", "https://api.example.com/");
+  vi.resetModules();
 
-  const configuredApi = require("./api");
+  const configuredApi = await import("./api");
 
   expect(configuredApi.API_BASE_URL).toBe("https://api.example.com");
   expect(configuredApi.API_ENDPOINTS.generateFiles).toBe(
     "https://api.example.com/generate-files"
   );
 
-  if (previousApiBaseUrl === undefined) {
-    delete process.env.REACT_APP_API_BASE_URL;
-  } else {
-    process.env.REACT_APP_API_BASE_URL = previousApiBaseUrl;
-  }
-  jest.resetModules();
+  vi.unstubAllEnvs();
+  vi.resetModules();
 });

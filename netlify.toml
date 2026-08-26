@@ -1,5 +1,13 @@
 # GitHub Actions publishes verified artifacts for staging and production.
 # Netlify remains connected only to provide Deploy Previews for pull requests.
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "24.19.0"
+  NPM_VERSION = "11.17.0"
+
 [context.production]
   ignore = "exit 0"
 
