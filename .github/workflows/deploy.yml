@@ -54,7 +54,7 @@ jobs:
           gh run download "$CI_RUN_ID"
           --repo "$REPOSITORY"
           --name "$ARTIFACT_NAME"
-          --dir build
+          --dir dist
 
       - name: Deploy application to Netlify
         env:
@@ -64,7 +64,7 @@ jobs:
           DEPLOY_BRANCH: ${{ github.event.workflow_run.head_branch }}
         run: |
           common_args=(
-            --dir=build
+            --dir=dist
             --no-build
             --site="$NETLIFY_SITE_ID"
             --auth="$NETLIFY_AUTH_TOKEN"
