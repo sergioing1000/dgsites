@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { FaGlobe, FaFileExcel } from "react-icons/fa";
 import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
 import { ClipLoader } from "react-spinners";
@@ -25,8 +25,15 @@ const SingleSite = () => {
   const [showMapModal, setShowMapModal] = useState(false);
   const [markerPosition, setMarkerPosition] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [excelFileUrl, setExcelFileUrl] = useState("");
+  const [excelFile, setExcelFile] = useState(null);
   const [requestError, setRequestError] = useState("");
+
+  useEffect(
+    () => () => {
+      if (excelFile?.url) URL.revokeObjectURL(excelFile.url);
+    },
+    [excelFile]
+  );
 
   const LocationMarker = ({ setMarkerPosition, setFormData }) => {
     useMapEvents({
@@ -72,11 +79,15 @@ const SingleSite = () => {
     const data = buildReportPayload(formData);
 
     setLoading(true);
-    setExcelFileUrl("");
+    setExcelFile(null);
     setRequestError("");
 
     try {
-      setExcelFileUrl(await requestReport(data));
+      const report = await requestReport(data);
+      setExcelFile({
+        url: URL.createObjectURL(report.blob),
+        fileName: report.fileName,
+      });
     } catch (error) {
       setRequestError(getReportErrorMessage(error));
     } finally {
@@ -249,12 +260,11 @@ const SingleSite = () => {
             </div>
           )}
 
-          {excelFileUrl && (
+          {excelFile && (
             <div style={{ marginTop: "1rem", textAlign: "center" }}>
               <a
-                href={excelFileUrl}
-                target="_blank"
-                rel="noreferrer"
+                href={excelFile.url}
+                download={excelFile.fileName}
                 className="excel-download-link"
               >
                 <FaFileExcel size={32} color="#217346" /> Download Excel File

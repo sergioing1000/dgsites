@@ -1,18 +1,14 @@
-import {
-  API_BASE_URL,
-  API_ENDPOINTS,
-  resolveBackendUrl,
-} from "./api";
+import { API_BASE_URL, API_ENDPOINTS } from "./api";
 
-test("builds the file generation endpoint from the backend URL", () => {
-  expect(API_ENDPOINTS.generateFiles).toBe(
-    `${API_BASE_URL}/generate-files`
+test("builds the Excel report endpoint from the backend URL", () => {
+  expect(API_ENDPOINTS.excelReport).toBe(
+    `${API_BASE_URL}/api/v1/excel-report`
   );
 });
 
-test("resolves a download path against the backend URL", () => {
-  expect(resolveBackendUrl("/download/report.xlsx")).toBe(
-    `${API_BASE_URL}/download/report.xlsx`
+test("uses Render as the default backend", () => {
+  expect(API_BASE_URL).toBe(
+    "https://wind-data-api.onrender.com"
   );
 });
 
@@ -23,8 +19,8 @@ test("uses the backend URL configured for the environment", async () => {
   const configuredApi = await import("./api");
 
   expect(configuredApi.API_BASE_URL).toBe("https://api.example.com");
-  expect(configuredApi.API_ENDPOINTS.generateFiles).toBe(
-    "https://api.example.com/generate-files"
+  expect(configuredApi.API_ENDPOINTS.excelReport).toBe(
+    "https://api.example.com/api/v1/excel-report"
   );
 
   vi.unstubAllEnvs();

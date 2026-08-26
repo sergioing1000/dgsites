@@ -1,12 +1,12 @@
 import axios from "axios";
 
-import { API_ENDPOINTS, resolveBackendUrl } from "../config/api";
+import { API_ENDPOINTS } from "../config/api";
 
 const GENERIC_ERROR_MESSAGE =
   "We could not generate the report. Please try again.";
-const MISSING_LINK_MESSAGE =
-  "The server response did not include a download link.";
-const SERVER_ERROR_MESSAGE = "The server could not generate the report.";
+const INVALID_REPORT_MESSAGE =
+  "The server response did not contain a valid Excel report.";
+const DEFAULT_REPORT_FILENAME = "weather-report.xlsx";
 
 export class ReportApiError extends Error {
   constructor(code) {
@@ -16,29 +16,48 @@ export class ReportApiError extends Error {
   }
 }
 
+const getHeader = (headers, name) =>
+  headers?.get?.(name) ?? headers?.[name] ?? headers?.[name.toLowerCase()];
+
+const getReportFilename = (headers) => {
+  const disposition = getHeader(headers, "content-disposition");
+  if (!disposition) return DEFAULT_REPORT_FILENAME;
+
+  const encodedMatch = disposition.match(/filename\*=UTF-8''([^;]+)/i);
+  const quotedMatch = disposition.match(/filename="([^"]+)"/i);
+  const plainMatch = disposition.match(/filename=([^;]+)/i);
+  const candidate = encodedMatch?.[1] ?? quotedMatch?.[1] ?? plainMatch?.[1];
+
+  if (!candidate) return DEFAULT_REPORT_FILENAME;
+
+  try {
+    const decoded = decodeURIComponent(candidate.trim());
+    const safeName = decoded.split(/[\\/]/).pop().replace(/[\r\n"]/g, "");
+    return safeName || DEFAULT_REPORT_FILENAME;
+  } catch {
+    return DEFAULT_REPORT_FILENAME;
+  }
+};
+
 export const requestReport = async (payload) => {
-  const response = await axios.post(API_ENDPOINTS.generateFiles, payload, {
-    headers: {
-      "Content-Type": "application/json",
-    },
+  const response = await axios.post(API_ENDPOINTS.excelReport, payload, {
+    headers: { "Content-Type": "application/json" },
+    responseType: "blob",
   });
 
-  if (response?.data?.error) {
-    throw new ReportApiError("server-error");
+  if (!(response?.data instanceof Blob) || response.data.size === 0) {
+    throw new ReportApiError("invalid-report");
   }
 
-  const downloadPath = response?.data?.excel_file_url;
-  if (!downloadPath) {
-    throw new ReportApiError("missing-download-link");
-  }
-
-  return resolveBackendUrl(downloadPath);
+  return {
+    blob: response.data,
+    fileName: getReportFilename(response.headers),
+  };
 };
 
 export const getReportErrorMessage = (error) => {
-  if (error instanceof ReportApiError) {
-    if (error.code === "missing-download-link") return MISSING_LINK_MESSAGE;
-    if (error.code === "server-error") return SERVER_ERROR_MESSAGE;
+  if (error instanceof ReportApiError && error.code === "invalid-report") {
+    return INVALID_REPORT_MESSAGE;
   }
 
   return GENERIC_ERROR_MESSAGE;

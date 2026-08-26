@@ -14,40 +14,55 @@ beforeEach(() => {
   axios.post.mockReset();
 });
 
-test("returns an absolute download URL for a valid response", async () => {
+test("returns the streamed workbook and its response filename", async () => {
+  const workbook = new Blob(["xlsx"], {
+    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  });
   axios.post.mockResolvedValueOnce({
-    data: { excel_file_url: "/download/report.xlsx" },
+    data: workbook,
+    headers: {
+      "content-disposition": 'attachment; filename="station-report.xlsx"',
+    },
   });
 
-  await expect(requestReport({ station_name: "Site" })).resolves.toMatch(
-    /\/download\/report\.xlsx$/
+  await expect(requestReport({ station_name: "Site" })).resolves.toEqual({
+    blob: workbook,
+    fileName: "station-report.xlsx",
+  });
+  expect(axios.post).toHaveBeenCalledWith(
+    expect.stringMatching(/\/api\/v1\/excel-report$/),
+    { station_name: "Site" },
+    {
+      headers: { "Content-Type": "application/json" },
+      responseType: "blob",
+    }
   );
 });
 
-test("classifies a backend error response", async () => {
-  axios.post.mockResolvedValueOnce({ data: { error: "generation failed" } });
+test("uses a safe default filename when the response omits it", async () => {
+  const workbook = new Blob(["xlsx"]);
+  axios.post.mockResolvedValueOnce({ data: workbook, headers: {} });
 
-  await expect(requestReport({})).rejects.toMatchObject({
-    name: "ReportApiError",
-    code: "server-error",
+  await expect(requestReport({})).resolves.toEqual({
+    blob: workbook,
+    fileName: "weather-report.xlsx",
   });
 });
 
-test("classifies a response without a download URL", async () => {
-  axios.post.mockResolvedValueOnce({ data: {} });
+test("rejects an empty or non-binary report", async () => {
+  axios.post.mockResolvedValueOnce({ data: {}, headers: {} });
 
   await expect(requestReport({})).rejects.toMatchObject({
     name: "ReportApiError",
-    code: "missing-download-link",
+    code: "invalid-report",
   });
 });
 
 test("maps controlled and unexpected errors to user messages", () => {
   expect(
-    getReportErrorMessage(new ReportApiError("missing-download-link"))
-  ).toBe("The server response did not include a download link.");
-  expect(getReportErrorMessage(new ReportApiError("server-error"))).toBe(
-    "The server could not generate the report."
+    getReportErrorMessage(new ReportApiError("invalid-report"))
+  ).toBe(
+    "The server response did not contain a valid Excel report."
   );
   expect(getReportErrorMessage(new Error("Network unavailable"))).toBe(
     "We could not generate the report. Please try again."

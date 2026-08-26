@@ -9,7 +9,7 @@ test("renders the application header and main selector", () => {
   render(<App />);
 
   expect(
-    screen.getByRole("link", { name: /solar app by sergio cruz/i })
+    screen.getByRole("link", { name: /solar app by devguards/i })
   ).toBeInTheDocument();
   expect(
     screen.getByRole("img", { name: /nasa power logo/i })
