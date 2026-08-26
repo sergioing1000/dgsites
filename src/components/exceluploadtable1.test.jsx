@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
-import { fetchStationClimate } from "../services/nasaPowerApi";
+import { fetchWeatherBatch } from "../services/multiSiteWeather";
 
 import ExcelUploadTable from "./exceluploadtable1.jsx";
 
@@ -22,13 +22,9 @@ vi.mock("exceljs", () => ({
 
 vi.mock("file-saver", () => ({ saveAs: vi.fn() }));
 
-vi.mock("../services/nasaPowerApi", async () => {
-  const actual = await vi.importActual("../services/nasaPowerApi");
-  return {
-    ...actual,
-    fetchStationClimate: vi.fn(),
-  };
-});
+vi.mock("../services/multiSiteWeather", () => ({
+  fetchWeatherBatch: vi.fn(),
+}));
 
 vi.mock("react-leaflet", () => ({
   MapContainer: ({ children }) => <div>{children}</div>,
@@ -74,7 +70,7 @@ beforeEach(() => {
     ["Site", "EB", "State", "Lat", "Long"],
     [1, "Station A", "State A", 4.6097, -74.0817],
   ]);
-  fetchStationClimate.mockReset();
+  fetchWeatherBatch.mockReset();
   saveAs.mockReset();
 });
 
@@ -104,7 +100,7 @@ test("rejects a spreadsheet without the required columns", async () => {
   expect(screen.queryByRole("button", { name: "API" })).not.toBeInTheDocument();
 });
 
-test("rejects rows with coordinates outside their valid range", async () => {
+test("rejects rows with coordinates outside backend coverage", async () => {
   XLSX.utils.sheet_to_json.mockReturnValue([
     ["Site", "EB", "State", "Lat", "Long"],
     [1, "Station A", "State A", 120, -74.0817],
@@ -114,12 +110,12 @@ test("rejects rows with coordinates outside their valid range", async () => {
   uploadFile(container);
 
   expect(await screen.findByRole("alert")).toHaveTextContent(
-    "Row 2: Latitude must be between -90 and 90."
+    "Row 2: Latitude must be between -4.23 and 12.44."
   );
   expect(screen.queryByRole("button", { name: "API" })).not.toBeInTheDocument();
 });
 
-test("loads a valid template and enables the NASA request", async () => {
+test("loads a valid template and enables the backend request", async () => {
   const { container } = render(<ExcelUploadTable />);
 
   uploadFile(container);
@@ -130,9 +126,10 @@ test("loads a valid template and enables the NASA request", async () => {
 });
 
 test("shows the failed station and does not export a partial report", async () => {
-  fetchStationClimate.mockRejectedValueOnce(
-    new Error("Solar request failed with status 503.")
-  );
+  fetchWeatherBatch.mockResolvedValueOnce({
+    results: [],
+    errors: ["Station A: NASA POWER is currently unavailable."],
+  });
   const { container } = render(<ExcelUploadTable />);
   uploadFile(container);
   const apiButton = await screen.findByRole("button", { name: "API" });
@@ -140,7 +137,23 @@ test("shows the failed station and does not export a partial report", async () =
   fireEvent.click(apiButton);
 
   expect(await screen.findByRole("alert")).toHaveTextContent(
-    "Station A: Solar request failed with status 503."
+    "Station A: NASA POWER is currently unavailable."
   );
   expect(saveAs).not.toHaveBeenCalled();
+  expect(fetchWeatherBatch).toHaveBeenCalledWith(
+    [
+      {
+        baseStation: "Station A",
+        state: "State A",
+        latitude: 4.6097,
+        longitude: -74.0817,
+        load: "",
+      },
+    ],
+    expect.objectContaining({
+      start: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
+      end: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
+    }),
+    expect.objectContaining({ concurrency: 3 })
+  );
 });

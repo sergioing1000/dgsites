@@ -11,10 +11,8 @@ import {
   parseSiteSpreadsheet,
   validateSpreadsheetFile,
 } from "../domain/siteSpreadsheet";
-import {
-  calculateNasaDateWindow,
-  fetchStationClimate,
-} from "../services/nasaPowerApi";
+import { calculateWeatherDateWindow } from "../services/weatherDataApi";
+import { fetchWeatherBatch } from "../services/multiSiteWeather";
 
 import 'leaflet/dist/leaflet.css';
 delete L.Icon.Default.prototype._getIconUrl;
@@ -67,6 +65,9 @@ const ExcelUploadTable = () => {
         const workbook = XLSX.read(data, { type: "array" });
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];
+        if (!sheetName || !worksheet) {
+          throw new Error("Spreadsheet does not contain a worksheet.");
+        }
         const matrix = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
         const result = parseSiteSpreadsheet(matrix);
 
@@ -138,7 +139,7 @@ const ExcelUploadTable = () => {
   const closeModal = () => setSelectedLocation(null);
 
   const fetchAPI = async () => {
-    const dateWindow = calculateNasaDateWindow();
+    const dateWindow = calculateWeatherDateWindow();
 
     setRequestErrors([]);
     setProgress(0);
@@ -146,12 +147,19 @@ const ExcelUploadTable = () => {
 
     const solarResults = [];
     const windResults = [];
-    const stationErrors = [];
+    const { results, errors: stationErrors } = await fetchWeatherBatch(
+      tableData,
+      dateWindow,
+      {
+        concurrency: 3,
+        onProgress: ({ completed, total, site }) => {
+          setCurrentStation(site.baseStation);
+          setProgress(Math.round((completed / total) * 100));
+        },
+      }
+    );
 
-    for (let i = 0; i < tableData.length; i++) {
-      const row = tableData[i];
-      setCurrentStation(row.baseStation);
-
+    results.forEach(({ site: row, climate }) => {
       const baseData = {
         baseStation: row.baseStation,
         state: row.state,
@@ -160,43 +168,32 @@ const ExcelUploadTable = () => {
         load: row.load,
       };
 
-      try {
-        const climate = await fetchStationClimate(row, dateWindow);
+      solarResults.push({
+        ...baseData,
+        ...Object.fromEntries(
+          Object.entries(climate.solar).map(([date, val]) => [
+            `Solar_${date}`,
+            val,
+          ])
+        ),
+      });
 
-        solarResults.push({
-          ...baseData,
-          ...Object.fromEntries(
-            Object.entries(climate.solar).map(([date, val]) => [
-              `Solar_${date}`,
-              val,
-            ])
-          ),
-        });
-
-        windResults.push({
-          ...baseData,
-          ...Object.fromEntries(
-            Object.entries(climate.windSpeed).map(([date, val]) => [
-              `WS2M_${date}`,
-              val,
-            ])
-          ),
-          ...Object.fromEntries(
-            Object.entries(climate.windDirection).map(([date, val]) => [
-              `WD2M_${date}`,
-              val,
-            ])
-          ),
-        });
-      } catch (err) {
-        stationErrors.push(
-          `${row.baseStation}: ${err.message || "NASA POWER request failed."}`
-        );
-      }
-
-      setProgress(Math.round(((i + 1) / tableData.length) * 100));
-      await new Promise((resolve) => setTimeout(resolve, 5));
-    }
+      windResults.push({
+        ...baseData,
+        ...Object.fromEntries(
+          Object.entries(climate.windSpeed).map(([date, val]) => [
+            `WS2M_${date}`,
+            val,
+          ])
+        ),
+        ...Object.fromEntries(
+          Object.entries(climate.windDirection).map(([date, val]) => [
+            `WD2M_${date}`,
+            val,
+          ])
+        ),
+      });
+    });
 
     if (stationErrors.length > 0) {
       setRequestErrors(stationErrors);
@@ -501,7 +498,7 @@ const ExcelUploadTable = () => {
       {showProgress && (
         <div className="modal-backdrop">
           <div className="modal-content">
-            <h3>Requesting NASA Information...</h3>
+            <h3>Requesting weather information...</h3>
             <p>
               <strong>Base Station:</strong> {currentStation} ...
             </p>
