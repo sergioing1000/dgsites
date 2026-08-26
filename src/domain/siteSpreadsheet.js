@@ -1,4 +1,7 @@
-import { validateCoordinates } from "./siteValidation";
+import { validateReportCoordinates } from "./siteValidation";
+
+const MAX_SPREADSHEET_BYTES = 5 * 1024 * 1024;
+const MAX_SITE_ROWS = 100;
 
 const REQUIRED_COLUMNS = [
   { key: "baseStation", label: "EB", aliases: ["eb", "base station"] },
@@ -32,6 +35,9 @@ export const validateSpreadsheetFile = (file) => {
   if (!file) return ["Please select a spreadsheet file."];
   if (!/\.(xlsx|xls)$/i.test(file.name || "")) {
     return ["Unsupported file type. Please upload an .xls or .xlsx file."];
+  }
+  if (Number.isFinite(file.size) && file.size > MAX_SPREADSHEET_BYTES) {
+    return ["The spreadsheet must not exceed 5 MiB."];
   }
   return [];
 };
@@ -81,6 +87,13 @@ export const parseSiteSpreadsheet = (matrix) => {
     };
   }
 
+  if (dataRows.length > MAX_SITE_ROWS) {
+    return {
+      sites: [],
+      errors: ["The spreadsheet must not contain more than 100 site rows."],
+    };
+  }
+
   const sites = [];
   const errors = [];
 
@@ -94,7 +107,7 @@ export const parseSiteSpreadsheet = (matrix) => {
     if (!baseStation) rowMessages.push("Base Station is required");
     if (!state) rowMessages.push("State is required");
 
-    const coordinateErrors = validateCoordinates({ latitude, longitude });
+    const coordinateErrors = validateReportCoordinates({ latitude, longitude });
     if (coordinateErrors.latitude) rowMessages.push(coordinateErrors.latitude);
     if (coordinateErrors.longitude) rowMessages.push(coordinateErrors.longitude);
 

@@ -8,6 +8,15 @@ test("accepts supported spreadsheet extensions case-insensitively", () => {
   expect(validateSpreadsheetFile({ name: "sites.xls" })).toEqual([]);
 });
 
+test("rejects spreadsheet files larger than 5 MiB", () => {
+  expect(
+    validateSpreadsheetFile({
+      name: "sites.xlsx",
+      size: 5 * 1024 * 1024 + 1,
+    })
+  ).toEqual(["The spreadsheet must not exceed 5 MiB."]);
+});
+
 test("maps required columns by header instead of position", () => {
   expect(
     parseSiteSpreadsheet([
@@ -65,8 +74,36 @@ test("rejects the complete upload when a row is invalid", () => {
   ).toEqual({
     sites: [],
     errors: [
-      "Row 3: State is required; Latitude must be between -90 and 90; Longitude must be between -180 and 180.",
+      "Row 3: State is required; Latitude must be between -4.23 and 12.44; Longitude must be between -79.09 and -66.88.",
     ],
+  });
+});
+
+test("rejects coordinates outside the backend coverage for Colombia", () => {
+  expect(
+    parseSiteSpreadsheet([
+      ["EB", "State", "Lat", "Long"],
+      ["Station A", "Outside", 20, -74],
+    ])
+  ).toEqual({
+    sites: [],
+    errors: ["Row 2: Latitude must be between -4.23 and 12.44."],
+  });
+});
+
+test("rejects spreadsheets with more than 100 site rows", () => {
+  const rows = Array.from({ length: 101 }, (_, index) => [
+    `Station ${index + 1}`,
+    "State",
+    4.6,
+    -74.1,
+  ]);
+
+  expect(
+    parseSiteSpreadsheet([["EB", "State", "Lat", "Long"], ...rows])
+  ).toEqual({
+    sites: [],
+    errors: ["The spreadsheet must not contain more than 100 site rows."],
   });
 });
 
