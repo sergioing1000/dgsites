@@ -1,11 +1,12 @@
 import React, { useState } from "react";
-import axios from "axios";
 import { FaGlobe, FaFileExcel } from "react-icons/fa";
 import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
 import { ClipLoader } from "react-spinners";
 
 import NasaPower from "../assets/images/nasapower.jpeg";
-import { API_ENDPOINTS, resolveBackendUrl } from "../config/api";
+import { buildReportPayload } from "../domain/dateRange";
+import { validateFormStep } from "../domain/siteValidation";
+import { getReportErrorMessage, requestReport } from "../services/reportApi";
 
 import "./singlesite1.css";
 import "leaflet/dist/leaflet.css";
@@ -25,6 +26,7 @@ const SingleSite = () => {
   const [markerPosition, setMarkerPosition] = useState(null);
   const [loading, setLoading] = useState(false);
   const [excelFileUrl, setExcelFileUrl] = useState("");
+  const [requestError, setRequestError] = useState("");
 
   const LocationMarker = ({ setMarkerPosition, setFormData }) => {
     useMapEvents({
@@ -42,25 +44,7 @@ const SingleSite = () => {
   };
 
   const validateStep = () => {
-    const newErrors = {};
-    switch (step) {
-      case 1:
-        if (!formData.latitude) newErrors.latitude = "Latitude is required";
-        if (!formData.longitude) newErrors.longitude = "Longitude is required";
-        break;
-      case 2:
-        if (formData.useCustomDates) {
-          if (!formData.startDate)
-            newErrors.startDate = "Start Date is required";
-          if (!formData.endDate) newErrors.endDate = "End Date is required";
-        } else {
-          if (!formData.years)
-            newErrors.years = "Please select an option for Historic data";
-        }
-        break;
-      default:
-        break;
-    }
+    const newErrors = validateFormStep(step, formData);
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -73,6 +57,8 @@ const SingleSite = () => {
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
+    setErrors((previous) => ({ ...previous, [name]: undefined }));
+    setRequestError("");
     if (type === "checkbox") {
       setFormData({ ...formData, [name]: checked });
     } else {
@@ -80,67 +66,19 @@ const SingleSite = () => {
     }
   };
 
-  const calculateDateRange = () => {
-    if (formData.useCustomDates) {
-      return {
-        start: formData.startDate,
-        end: formData.endDate,
-      };
-    } else {
-      const endDate = new Date();
-      const startDate = new Date();
-
-      if (formData.years === "30") {
-        startDate.setDate(endDate.getDate() - 30);
-      } else {
-        const months = parseInt(formData.years, 10);
-        startDate.setMonth(endDate.getMonth() - months);
-      }
-
-      const formatDate = (date) => {
-        return date.toISOString().split("T")[0];
-      };
-
-      return {
-        start: formatDate(startDate),
-        end: formatDate(endDate),
-      };
-    }
-  };
-
   const handleSend = async () => {
     if (!validateStep()) return;
 
-    const { start, end } = calculateDateRange();
-    const data = {
-      station_name: "Station Site A",
-      latitude: parseFloat(formData.latitude),
-      longitude: parseFloat(formData.longitude),
-      start,
-      end,
-    };
+    const data = buildReportPayload(formData);
 
     setLoading(true);
     setExcelFileUrl("");
+    setRequestError("");
 
     try {
-      const response = await axios.post(
-        API_ENDPOINTS.generateFiles,
-        data,
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      console.log(response.data);
-
-      if (response.data && response.data.excel_file_url) {
-        setExcelFileUrl(resolveBackendUrl(response.data.excel_file_url));
-      }
+      setExcelFileUrl(await requestReport(data));
     } catch (error) {
-      console.error("Error generating file:", error);
+      setRequestError(getReportErrorMessage(error));
     } finally {
       setLoading(false);
     }
@@ -302,6 +240,12 @@ const SingleSite = () => {
                 aria-label="Loading Spinner"
                 data-testid="loader"
               />
+            </div>
+          )}
+
+          {requestError && (
+            <div className="request-error" role="alert">
+              {requestError}
             </div>
           )}
 
