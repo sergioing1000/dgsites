@@ -8,4 +8,5 @@ export const API_BASE_URL = configuredApiBaseUrl.replace(/\/+$/, "");
 
 export const API_ENDPOINTS = Object.freeze({
   excelReport: `${API_BASE_URL}/api/v1/excel-report`,
+  weatherData: `${API_BASE_URL}/api/v1/weather-data`,
 });
