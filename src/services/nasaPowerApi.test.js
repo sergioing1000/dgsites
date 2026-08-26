@@ -10,7 +10,7 @@ const dateWindow = { start: "20240101", end: "20240131" };
 const response = (body, options = {}) => ({
   ok: options.ok ?? true,
   status: options.status ?? 200,
-  json: jest.fn().mockResolvedValue(body),
+  json: vi.fn().mockResolvedValue(body),
 });
 
 test("calculates the NASA date window deterministically", () => {
@@ -27,7 +27,7 @@ test("formats NASA date keys", () => {
 });
 
 test("returns normalized solar and wind data", async () => {
-  const fetchImplementation = jest
+  const fetchImplementation = vi
     .fn()
     .mockResolvedValueOnce(
       response({
@@ -59,7 +59,7 @@ test("returns normalized solar and wind data", async () => {
 
 test("rejects a non-successful HTTP response before parsing JSON", async () => {
   const failedResponse = response({}, { ok: false, status: 503 });
-  const fetchImplementation = jest.fn().mockResolvedValue(failedResponse);
+  const fetchImplementation = vi.fn().mockResolvedValue(failedResponse);
 
   await expect(
     fetchStationClimate(site, dateWindow, fetchImplementation)
@@ -69,7 +69,7 @@ test("rejects a non-successful HTTP response before parsing JSON", async () => {
 });
 
 test("rejects a successful response without the required parameter", async () => {
-  const fetchImplementation = jest
+  const fetchImplementation = vi
     .fn()
     .mockResolvedValueOnce(response({ properties: { parameter: {} } }))
     .mockResolvedValueOnce(
@@ -86,7 +86,7 @@ test("rejects a successful response without the required parameter", async () =>
 });
 
 test("normalizes network failures", async () => {
-  const fetchImplementation = jest
+  const fetchImplementation = vi
     .fn()
     .mockRejectedValue(new TypeError("Network unavailable"));
 

@@ -3,15 +3,15 @@ import axios from "axios";
 
 import SingleSite from "./singlesite1.jsx";
 
-jest.mock("axios", () => ({
-  post: jest.fn(),
+vi.mock("axios", () => ({
+  default: { post: vi.fn() },
 }));
 
-jest.mock("react-leaflet", () => ({
+vi.mock("react-leaflet", () => ({
   MapContainer: ({ children }) => <div>{children}</div>,
   TileLayer: () => null,
   Marker: () => null,
-  useMapEvents: jest.fn(),
+  useMapEvents: vi.fn(),
 }));
 
 const fillCoordinates = (container, latitude, longitude) => {

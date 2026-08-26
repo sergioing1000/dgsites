@@ -5,46 +5,46 @@ import { fetchStationClimate } from "../services/nasaPowerApi";
 
 import ExcelUploadTable from "./exceluploadtable1.jsx";
 
-jest.mock("xlsx", () => ({
-  read: jest.fn(() => ({
+vi.mock("xlsx", () => ({
+  read: vi.fn(() => ({
     SheetNames: ["Sites"],
     Sheets: { Sites: {} },
   })),
   utils: {
-    sheet_to_json: jest.fn(),
+    sheet_to_json: vi.fn(),
   },
 }));
 
-jest.mock("exceljs", () => ({
+vi.mock("exceljs", () => ({
   __esModule: true,
-  default: { Workbook: jest.fn() },
+  default: { Workbook: vi.fn() },
 }));
 
-jest.mock("file-saver", () => ({ saveAs: jest.fn() }));
+vi.mock("file-saver", () => ({ saveAs: vi.fn() }));
 
-jest.mock("../services/nasaPowerApi", () => {
-  const actual = jest.requireActual("../services/nasaPowerApi");
+vi.mock("../services/nasaPowerApi", async () => {
+  const actual = await vi.importActual("../services/nasaPowerApi");
   return {
     ...actual,
-    fetchStationClimate: jest.fn(),
+    fetchStationClimate: vi.fn(),
   };
 });
 
-jest.mock("react-leaflet", () => ({
+vi.mock("react-leaflet", () => ({
   MapContainer: ({ children }) => <div>{children}</div>,
   TileLayer: () => null,
   Marker: ({ children }) => <div>{children}</div>,
   Popup: ({ children }) => <div>{children}</div>,
-  useMap: () => ({ setView: jest.fn() }),
+  useMap: () => ({ setView: vi.fn() }),
 }));
 
-jest.mock("leaflet", () => ({
+vi.mock("leaflet", () => ({
   __esModule: true,
   default: {
     Icon: {
       Default: {
         prototype: {},
-        mergeOptions: jest.fn(),
+        mergeOptions: vi.fn(),
       },
     },
   },
