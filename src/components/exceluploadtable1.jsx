@@ -7,6 +7,15 @@ import "./exceluploadtable1.css";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import L from 'leaflet';
 
+import {
+  parseSiteSpreadsheet,
+  validateSpreadsheetFile,
+} from "../domain/siteSpreadsheet";
+import {
+  calculateNasaDateWindow,
+  fetchStationClimate,
+} from "../services/nasaPowerApi";
+
 import 'leaflet/dist/leaflet.css';
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -32,35 +41,52 @@ const ExcelUploadTable = () => {
   const [currentStation, setCurrentStation] = useState("");
   const markerRef = useRef();
   const [hasUploaded, setHasUploaded] = useState(false);
+  const [uploadErrors, setUploadErrors] = useState([]);
+  const [requestErrors, setRequestErrors] = useState([]);
 
 
   const handleFileUpload = (event) => {
     const file = event.target.files[0];
     if (!file) return;
 
-    setHasUploaded(true); // ← add this line
+    setUploadErrors([]);
+    setRequestErrors([]);
+    setTableData([]);
+    setHasUploaded(false);
+
+    const fileErrors = validateSpreadsheetFile(file);
+    if (fileErrors.length > 0) {
+      setUploadErrors(fileErrors);
+      return;
+    }
 
     const reader = new FileReader();
     reader.onload = (e) => {
-      const data = new Uint8Array(e.target.result);
-      const workbook = XLSX.read(data, { type: "array" });
+      try {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: "array" });
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        const matrix = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+        const result = parseSiteSpreadsheet(matrix);
 
-      const sheetName = workbook.SheetNames[0];
-      const worksheet = workbook.Sheets[sheetName];
+        if (result.errors.length > 0) {
+          setUploadErrors(result.errors);
+          return;
+        }
 
-      const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-      const [, ...rows] = jsonData;
+        setTableData(result.sites);
+        setHasUploaded(true);
+        setCurrentPage(1);
+      } catch {
+        setUploadErrors([
+          "The spreadsheet could not be read. Verify that the file is not corrupted.",
+        ]);
+      }
+    };
 
-      const parsedData = rows.map((row) => ({
-        baseStation: row[1] || "",
-        state: row[2] || "",
-        latitude: row[3] || "",
-        longitude: row[4] || "",
-        load: row[5] || "",
-      }));
-
-      setTableData(parsedData);
-      setCurrentPage(1);
+    reader.onerror = () => {
+      setUploadErrors(["The spreadsheet file could not be loaded."]);
     };
 
     reader.readAsArrayBuffer(file);
@@ -111,40 +137,16 @@ const ExcelUploadTable = () => {
 
   const closeModal = () => setSelectedLocation(null);
 
-  function formatDateKeys(obj) {
-    const formatted = {};
-    for (const key in obj) {
-      if (/^\d{8}$/.test(key)) {
-        // Format "20240101" → "2024-01-01"
-        const formattedKey = `${key.slice(0, 4)}-${key.slice(4, 6)}-${key.slice(
-          6
-        )}`;
-        formatted[formattedKey] = obj[key];
-      } else {
-        formatted[key] = obj[key];
-      }
-    }
-    return formatted;
-  }
-
   const fetchAPI = async () => {
-    /* const start = new Date(Date.now() - 1125 * 24 * 60 * 60 * 1000)
-      .toISOString()
-      .slice(0, 10)
-      .replace(/-/g, ""); */
-    const start = new Date(Date.now() - 720 * 24 * 60 * 60 * 1000)
-      .toISOString()
-      .slice(0, 10)
-      .replace(/-/g, "");
-    const end = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
-      .toISOString()
-      .slice(0, 10)
-      .replace(/-/g, "");
+    const dateWindow = calculateNasaDateWindow();
 
+    setRequestErrors([]);
+    setProgress(0);
     setShowProgress(true);
 
     const solarResults = [];
     const windResults = [];
+    const stationErrors = [];
 
     for (let i = 0; i < tableData.length; i++) {
       const row = tableData[i];
@@ -159,59 +161,51 @@ const ExcelUploadTable = () => {
       };
 
       try {
-        // 🌞 Solar Data
-        const solarUrl = `https://power.larc.nasa.gov/api/temporal/daily/point?parameters=ALLSKY_SFC_SW_DWN&community=RE&latitude=${row.latitude}&longitude=${row.longitude}&start=${start}&end=${end}&format=JSON`;
-        const solarRes = await fetch(solarUrl);
-        const solarJson = await solarRes.json();
-        const rawSolar =
-          solarJson.properties?.parameter?.ALLSKY_SFC_SW_DWN || {};
-        const formattedSolar = formatDateKeys(rawSolar);
+        const climate = await fetchStationClimate(row, dateWindow);
 
         solarResults.push({
           ...baseData,
           ...Object.fromEntries(
-            Object.entries(formattedSolar).map(([date, val]) => [
+            Object.entries(climate.solar).map(([date, val]) => [
               `Solar_${date}`,
               val,
             ])
           ),
         });
 
-        // 💨 Wind Data
-        const windUrl = `https://power.larc.nasa.gov/api/temporal/daily/point?parameters=WS2M,WD2M&community=RE&latitude=${row.latitude}&longitude=${row.longitude}&start=${start}&end=${end}&format=JSON`;
-        const windRes = await fetch(windUrl);
-        const windJson = await windRes.json();
-        const formattedWS2M = formatDateKeys(
-          windJson.properties?.parameter?.WS2M || {}
-        );
-        const formattedWD2M = formatDateKeys(
-          windJson.properties?.parameter?.WD2M || {}
-        );
-
         windResults.push({
           ...baseData,
           ...Object.fromEntries(
-            Object.entries(formattedWS2M).map(([date, val]) => [
+            Object.entries(climate.windSpeed).map(([date, val]) => [
               `WS2M_${date}`,
               val,
             ])
           ),
           ...Object.fromEntries(
-            Object.entries(formattedWD2M).map(([date, val]) => [
+            Object.entries(climate.windDirection).map(([date, val]) => [
               `WD2M_${date}`,
               val,
             ])
           ),
         });
       } catch (err) {
-        solarResults.push({ ...baseData, error: "Solar fetch failed" });
-        windResults.push({ ...baseData, error: "Wind fetch failed" });
+        stationErrors.push(
+          `${row.baseStation}: ${err.message || "NASA POWER request failed."}`
+        );
       }
 
       setProgress(Math.round(((i + 1) / tableData.length) * 100));
       await new Promise((resolve) => setTimeout(resolve, 5));
     }
 
+    if (stationErrors.length > 0) {
+      setRequestErrors(stationErrors);
+      setShowProgress(false);
+      setCurrentStation("");
+      return;
+    }
+
+    try {
     // Create Excel workbook
     const workbook = new ExcelJS.Workbook();
 
@@ -379,13 +373,17 @@ const ExcelUploadTable = () => {
     });
 
     // Generate and download
-    const buffer = await workbook.xlsx.writeBuffer();
-    const blob = new Blob([buffer], {
-      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    });
-    saveAs(blob, "results.xlsx");
-
-    setShowProgress(false);
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      saveAs(blob, "results.xlsx");
+    } catch {
+      setRequestErrors(["The results file could not be generated."]);
+    } finally {
+      setShowProgress(false);
+      setCurrentStation("");
+    }
   };
 
   return (
@@ -398,6 +396,17 @@ const ExcelUploadTable = () => {
         onChange={handleFileUpload}
         className="upload-button"
       />
+
+      {uploadErrors.length > 0 && (
+        <div className="multi-error" role="alert">
+          <strong>The spreadsheet could not be accepted:</strong>
+          <ul>
+            {uploadErrors.map((error) => (
+              <li key={error}>{error}</li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {!hasUploaded && (
       <div>
@@ -443,7 +452,7 @@ const ExcelUploadTable = () => {
                 <th onClick={() => handleSort("state")}>State</th>
                 <th onClick={() => handleSort("latitude")}>Latitude</th>
                 <th onClick={() => handleSort("longitude")}>Longitude</th>
-                <th onClick={() => handleSort("load")}>Load</th>{" "}
+                <th onClick={() => handleSort("load")}>Load</th>
               </tr>
             </thead>
             <tbody>
@@ -505,6 +514,17 @@ const ExcelUploadTable = () => {
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {requestErrors.length > 0 && (
+        <div className="multi-error" role="alert">
+          <strong>The report was not generated:</strong>
+          <ul>
+            {requestErrors.map((error) => (
+              <li key={error}>{error}</li>
+            ))}
+          </ul>
         </div>
       )}
 

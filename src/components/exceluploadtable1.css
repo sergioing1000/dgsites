@@ -35,6 +35,16 @@
   background-color: #00B0F0;
 }
 
+.multi-error {
+  color: #b42318;
+  margin: 0 0 20px;
+  text-align: left;
+}
+
+.multi-error ul {
+  margin: 8px 0 0;
+}
+
 .table-controls {
   display: flex;
   justify-content: space-between;
