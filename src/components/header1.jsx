@@ -14,7 +14,7 @@ const Header = () => {
         </a>
 
         <a href="/" className="brand-link">
-          Solar APP by Sergio Cruz
+          Solar APP by DevGuards
         </a>
       </div>
 

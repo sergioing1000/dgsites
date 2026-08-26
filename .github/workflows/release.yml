@@ -107,7 +107,7 @@ jobs:
           gh run download "$CI_RUN_ID"
           --repo "$REPOSITORY"
           --name "$ARTIFACT_NAME"
-          --dir build
+          --dir dist
 
       - name: Package release artifact
         env:
@@ -115,7 +115,7 @@ jobs:
         run: |
           set -euo pipefail
           ARCHIVE="dgsites-frontend-${RELEASE_TAG}.tar.gz"
-          tar -czf "$ARCHIVE" -C build .
+          tar -czf "$ARCHIVE" -C dist .
           sha256sum "$ARCHIVE" > "${ARCHIVE}.sha256"
 
       - name: Publish GitHub Release

@@ -1,16 +1,24 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import CarouselSelector from './carouselselector.jsx';
 
-jest.mock('./singlesite1.jsx', () => () => <div>Single site module</div>);
-jest.mock('./exceluploadtable1.jsx', () => () => <div>Multiple site module</div>);
-jest.mock('./currentlocation1.jsx', () => () => <div>Current location module</div>);
-jest.mock('./docs.jsx', () => () => <div>Documentation module</div>);
+vi.mock('./singlesite1.jsx', () => ({
+  default: () => <div>Single site module</div>,
+}));
+vi.mock('./exceluploadtable1.jsx', () => ({
+  default: () => <div>Multiple site module</div>,
+}));
+vi.mock('./currentlocation1.jsx', () => ({
+  default: () => <div>Current location module</div>,
+}));
+vi.mock('./docs.jsx', () => ({
+  default: () => <div>Documentation module</div>,
+}));
 
 beforeEach(() => {
-  global.Audio = jest.fn(() => ({
-    currentTime: 0,
-    play: jest.fn().mockResolvedValue(undefined),
-  }));
+  global.Audio = vi.fn(function AudioMock() {
+    this.currentTime = 0;
+    this.play = vi.fn().mockResolvedValue(undefined);
+  });
 });
 
 test('shows the available consultation options', () => {
