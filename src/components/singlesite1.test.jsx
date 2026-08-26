@@ -40,6 +40,8 @@ const chooseCustomDates = (container, startDate, endDate) => {
 
 beforeEach(() => {
   axios.post.mockReset();
+  URL.createObjectURL = vi.fn(() => "blob:station-report");
+  URL.revokeObjectURL = vi.fn();
 });
 
 test("rejects non-numeric coordinates before advancing", () => {
@@ -53,6 +55,18 @@ test("rejects non-numeric coordinates before advancing", () => {
   expect(axios.post).not.toHaveBeenCalled();
 });
 
+test("rejects coordinates outside Colombia before advancing", () => {
+  const { container } = render(<SingleSite />);
+
+  fillCoordinates(container, "20", "-74.0817");
+  fireEvent.click(screen.getByRole("button", { name: /next/i }));
+
+  expect(
+    screen.getByText("Latitude must be between -4.23 and 12.44")
+  ).toBeInTheDocument();
+  expect(axios.post).not.toHaveBeenCalled();
+});
+
 test("rejects an inverted custom date range without calling the backend", () => {
   const { container } = render(<SingleSite />);
   advanceToDates(container);
@@ -61,7 +75,7 @@ test("rejects an inverted custom date range without calling the backend", () => 
   fireEvent.click(screen.getByRole("button", { name: /send/i }));
 
   expect(
-    screen.getByText("Start date must be on or before end date")
+    screen.getByText("Start date must be before end date")
   ).toBeInTheDocument();
   expect(axios.post).not.toHaveBeenCalled();
 });
@@ -79,7 +93,7 @@ test("shows a visible message when the backend request fails", async () => {
   ).toHaveTextContent("We could not generate the report. Please try again.");
 });
 
-test("shows a visible message when the backend omits the download URL", async () => {
+test("shows a visible message when the backend returns a non-binary report", async () => {
   axios.post.mockResolvedValueOnce({ data: {} });
   const { container } = render(<SingleSite />);
   advanceToDates(container);
@@ -89,15 +103,21 @@ test("shows a visible message when the backend omits the download URL", async ()
 
   await waitFor(() => expect(axios.post).toHaveBeenCalledTimes(1));
   expect(await screen.findByRole("alert")).toHaveTextContent(
-    "The server response did not include a download link."
+    "The server response did not contain a valid Excel report."
   );
 });
 
-test("shows the download link after a successful request", async () => {
-  axios.post.mockResolvedValueOnce({
-    data: { excel_file_url: "/download/report.xlsx" },
+test("shows a local download link and releases it after use", async () => {
+  const workbook = new Blob(["xlsx"], {
+    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
   });
-  const { container } = render(<SingleSite />);
+  axios.post.mockResolvedValueOnce({
+    data: workbook,
+    headers: {
+      "content-disposition": 'attachment; filename="station-report.xlsx"',
+    },
+  });
+  const { container, unmount } = render(<SingleSite />);
   advanceToDates(container);
   chooseCustomDates(container, "2020-08-18", "2020-08-19");
 
@@ -106,12 +126,11 @@ test("shows the download link after a successful request", async () => {
   const downloadLink = await screen.findByRole("link", {
     name: /download excel file/i,
   });
-  expect(downloadLink).toHaveAttribute(
-    "href",
-    expect.stringMatching(/\/download\/report\.xlsx$/)
-  );
+  expect(downloadLink).toHaveAttribute("href", "blob:station-report");
+  expect(downloadLink).toHaveAttribute("download", "station-report.xlsx");
+  expect(URL.createObjectURL).toHaveBeenCalledWith(workbook);
   expect(axios.post).toHaveBeenCalledWith(
-    expect.stringMatching(/\/generate-files$/),
+    expect.stringMatching(/\/api\/v1\/excel-report$/),
     {
       station_name: "Station Site A",
       latitude: 4.6097,
@@ -119,6 +138,12 @@ test("shows the download link after a successful request", async () => {
       start: "2020-08-18",
       end: "2020-08-19",
     },
-    { headers: { "Content-Type": "application/json" } }
+    {
+      headers: { "Content-Type": "application/json" },
+      responseType: "blob",
+    }
   );
+
+  unmount();
+  expect(URL.revokeObjectURL).toHaveBeenCalledWith("blob:station-report");
 });

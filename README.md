@@ -34,7 +34,7 @@ npm run dev
 La URL del backend se configura en un archivo `.env` local:
 
 ```dotenv
-VITE_API_BASE_URL=https://wind-data-api-production.up.railway.app
+VITE_API_BASE_URL=https://wind-data-api.onrender.com
 ```
 
 Comandos de verificación:

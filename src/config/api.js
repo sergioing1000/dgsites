@@ -1,5 +1,5 @@
 const DEFAULT_API_BASE_URL =
-  "https://wind-data-api-production.up.railway.app";
+  "https://wind-data-api.onrender.com";
 
 const configuredApiBaseUrl =
   import.meta.env.VITE_API_BASE_URL?.trim() || DEFAULT_API_BASE_URL;
@@ -7,8 +7,5 @@ const configuredApiBaseUrl =
 export const API_BASE_URL = configuredApiBaseUrl.replace(/\/+$/, "");
 
 export const API_ENDPOINTS = Object.freeze({
-  generateFiles: `${API_BASE_URL}/generate-files`,
+  excelReport: `${API_BASE_URL}/api/v1/excel-report`,
 });
-
-export const resolveBackendUrl = (path) =>
-  new URL(path, `${API_BASE_URL}/`).toString();

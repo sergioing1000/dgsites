@@ -25,6 +25,12 @@ describe("coordinate validation", () => {
       {}
     );
   });
+
+  test("limits the report form to coordinates in Colombia", () => {
+    expect(
+      validateFormStep(1, { latitude: "20", longitude: "-74" })
+    ).toEqual({ latitude: "Latitude must be between -4.23 and 12.44" });
+  });
 });
 
 describe("date validation", () => {
@@ -46,7 +52,20 @@ describe("date validation", () => {
         },
         today
       )
-    ).toEqual({ startDate: "Start date must be on or before end date" });
+    ).toEqual({ startDate: "Start date must be before end date" });
+  });
+
+  test("rejects a single-day range required as two equal dates", () => {
+    expect(
+      validateDateSelection(
+        {
+          useCustomDates: true,
+          startDate: "2026-08-20",
+          endDate: "2026-08-20",
+        },
+        today
+      )
+    ).toEqual({ startDate: "Start date must be before end date" });
   });
 
   test("rejects future dates", () => {
