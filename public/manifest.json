@@ -1,6 +1,6 @@
 {
-  "short_name": "Solar App",
-  "name": "Solar App by DevGuards",
+  "short_name": "Solar / Wind",
+  "name": "Solar / Wind Field Console by DevGuards",
   "icons": [
     {
       "src": "favicon.ico",
@@ -20,6 +20,6 @@
   ],
   "start_url": ".",
   "display": "standalone",
-  "theme_color": "#000000",
-  "background_color": "#ffffff"
+  "theme_color": "#012146",
+  "background_color": "#eef4f8"
 }
