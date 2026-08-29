@@ -59,3 +59,18 @@ Las transiciones admitidas son:
 - `main` hacia `develop` para sincronizar una corrección urgente.
 
 Antes de solicitar revisión se debe comprobar que el cambio no incluya archivos ajenos a la solicitud y que las verificaciones aplicables tengan un resultado satisfactorio.
+
+## Verificaciones del frontend
+
+Antes de publicar una rama se ejecutan las mismas comprobaciones que utiliza CI:
+
+```bash
+npm ci --no-audit --no-fund
+npm run lint
+npm run test:coverage
+npm run build
+```
+
+CI separa lint, pruebas y build para que cada error tenga una señal independiente. La cobertura global mínima es 65% para statements, branches, functions y lines; el reporte HTML se conserva como artefacto durante siete días.
+
+Los pushes aprobados a `staging` y `main` despliegan exclusivamente el artefacto generado por CI. Después de publicarlo, CD comprueba la respuesta HTTP, el tipo de contenido y la presencia del elemento raíz de la aplicación. El release de producción solo se crea cuando esa comprobación termina correctamente.
