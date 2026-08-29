@@ -18,7 +18,8 @@ permissions:
 
 concurrency:
   group: frontend-ci-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: >-
+    ${{ github.event_name == 'pull_request' || github.ref_name == 'develop' }}
 
 jobs:
   lint:
@@ -107,3 +108,32 @@ jobs:
           path: dist
           if-no-files-found: error
           retention-days: 7
+
+  deploy-environment:
+    name: Deploy ${{ github.ref_name }}
+    needs: [lint, test, build]
+    if: github.event_name == 'push'
+    permissions:
+      actions: read
+      contents: read
+    uses: ./.github/workflows/netlify-deploy.yml
+    with:
+      ci_run_id: ${{ github.run_id }}
+      commit_sha: ${{ github.sha }}
+      deploy_alias: ${{ github.ref_name == 'main' && '' || github.ref_name }}
+      deploy_label: ${{ github.ref_name == 'main' && 'production' || (github.ref_name == 'develop' && 'development' || 'staging') }}
+      deploy_target: ${{ github.ref_name == 'main' && 'production' || 'alias' }}
+      environment_name: ${{ github.ref_name == 'main' && 'production' || (github.ref_name == 'develop' && 'development' || 'staging') }}
+    secrets: inherit
+
+  release:
+    name: Release deployed revision
+    needs: deploy-environment
+    if: github.event_name == 'push' && github.ref_name == 'main'
+    permissions:
+      actions: read
+      contents: write
+    uses: ./.github/workflows/release.yml
+    with:
+      ci_run_id: ${{ github.run_id }}
+      commit_sha: ${{ github.sha }}

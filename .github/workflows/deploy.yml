@@ -6,93 +6,101 @@ on:
       - Frontend CI
     types:
       - completed
+    branches:
+      - feature/CR-FE-**
+      - fix/CR-FE-**
 
 permissions:
   actions: read
   contents: read
+  pull-requests: read
 
 concurrency:
-  group: frontend-${{ github.event.workflow_run.head_branch }}
-  cancel-in-progress: false
+  group: frontend-preview-${{ github.event.workflow_run.head_branch }}
+  cancel-in-progress: true
 
 jobs:
-  deploy-environment:
-    name: Deploy ${{ github.event.workflow_run.head_branch }}
+  resolve-deployment:
+    name: Authorize pull request preview
     if: >-
       github.event.workflow_run.conclusion == 'success' &&
-      github.event.workflow_run.event == 'push' &&
-      (github.event.workflow_run.head_branch == 'main' ||
-      github.event.workflow_run.head_branch == 'staging')
+      github.event.workflow_run.event == 'pull_request'
     runs-on: ubuntu-latest
-    timeout-minutes: 10
-    environment:
-      name: ${{ github.event.workflow_run.head_branch == 'main' && 'production' || 'staging' }}
+    timeout-minutes: 5
+    outputs:
+      deploy_alias: ${{ steps.resolve.outputs.deploy_alias }}
+      deploy_label: ${{ steps.resolve.outputs.deploy_label }}
+      deploy_target: ${{ steps.resolve.outputs.deploy_target }}
+      environment_name: ${{ steps.resolve.outputs.environment_name }}
+      should_deploy: ${{ steps.resolve.outputs.should_deploy }}
 
     steps:
-      - name: Check out deployed revision
-        uses: actions/checkout@v7
-        with:
-          ref: ${{ github.event.workflow_run.head_sha }}
-
-      - name: Validate Netlify configuration
-        env:
-          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
-          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
-        run: |
-          if [ -z "$NETLIFY_AUTH_TOKEN" ] || [ -z "$NETLIFY_SITE_ID" ]; then
-            echo "NETLIFY_AUTH_TOKEN and NETLIFY_SITE_ID must be configured."
-            exit 1
-          fi
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: 24.19.0
-
-      - name: Download verified production artifact
+      - name: Resolve and authorize deployment
+        id: resolve
         env:
           GH_TOKEN: ${{ github.token }}
+          HEAD_REPOSITORY: ${{ github.event.workflow_run.head_repository.full_name }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
           REPOSITORY: ${{ github.repository }}
-          CI_RUN_ID: ${{ github.event.workflow_run.id }}
-          ARTIFACT_NAME: frontend-build-${{ github.event.workflow_run.head_sha }}
-        run: >-
-          gh run download "$CI_RUN_ID"
-          --repo "$REPOSITORY"
-          --name "$ARTIFACT_NAME"
-          --dir dist
-
-      - name: Deploy application to Netlify
-        env:
-          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
-          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
-          DEPLOY_SHA: ${{ github.event.workflow_run.head_sha }}
-          DEPLOY_BRANCH: ${{ github.event.workflow_run.head_branch }}
         run: |
-          common_args=(
-            --dir=dist
-            --no-build
-            --site="$NETLIFY_SITE_ID"
-            --auth="$NETLIFY_AUTH_TOKEN"
-            --message="GitHub Actions ${DEPLOY_BRANCH} ${DEPLOY_SHA}"
-          )
+          set -euo pipefail
 
-          if [[ "$DEPLOY_BRANCH" == "main" ]]; then
-            npx --yes netlify-cli@27.0.1 deploy "${common_args[@]}" --prod --json > netlify-deploy.json
-          else
-            npx --yes netlify-cli@27.0.1 deploy "${common_args[@]}" --alias=staging-candidate --json > netlify-deploy.json
+          should_deploy=false
+          deploy_alias=""
+          deploy_label=""
+          deploy_target=""
+          environment_name=""
+
+          if [[ "$HEAD_REPOSITORY" == "$REPOSITORY" ]]; then
+            pull_request_json=$(gh api \
+              --method GET \
+              "repos/${REPOSITORY}/commits/${HEAD_SHA}/pulls" \
+              --jq 'map(select(.state == "open" and .base.ref == "develop")) | first // empty')
+
+            if [[ -n "$pull_request_json" ]]; then
+              pr_number=$(jq -r '.number' <<< "$pull_request_json")
+              pr_head_branch=$(jq -r '.head.ref' <<< "$pull_request_json")
+              pr_head_repository=$(jq -r '.head.repo.full_name' <<< "$pull_request_json")
+              pr_head_sha=$(jq -r '.head.sha' <<< "$pull_request_json")
+
+              if [[ "$pr_head_repository" == "$REPOSITORY" && \
+                    "$pr_head_sha" == "$HEAD_SHA" && \
+                    "$pr_number" =~ ^[0-9]+$ && \
+                    "$pr_head_branch" =~ ^(feature|fix)/CR-FE-[0-9]{3}-[a-z0-9][a-z0-9-]*$ ]]; then
+                should_deploy=true
+                deploy_alias="deploy-preview-${pr_number}"
+                deploy_label="PR #${pr_number}"
+                deploy_target="alias"
+                environment_name="preview"
+              fi
+            fi
           fi
 
-      - name: Smoke check deployed application
-        run: node .github/scripts/smoke_check.mjs netlify-deploy.json
+          echo "should_deploy=${should_deploy}" >> "$GITHUB_OUTPUT"
+          echo "deploy_alias=${deploy_alias}" >> "$GITHUB_OUTPUT"
+          echo "deploy_label=${deploy_label}" >> "$GITHUB_OUTPUT"
+          echo "deploy_target=${deploy_target}" >> "$GITHUB_OUTPUT"
+          echo "environment_name=${environment_name}" >> "$GITHUB_OUTPUT"
 
-  release:
-    name: Release deployed revision
-    needs: deploy-environment
-    if: github.event.workflow_run.head_branch == 'main'
+          if [[ "$should_deploy" == "true" ]]; then
+            echo "Authorized deployment: ${deploy_label} (${HEAD_SHA})."
+          else
+            echo "This successful CI run is not eligible for deployment."
+          fi
+
+  deploy:
+    name: Deploy ${{ needs.resolve-deployment.outputs.deploy_label }}
+    needs: resolve-deployment
+    if: needs.resolve-deployment.outputs.should_deploy == 'true'
     permissions:
       actions: read
-      contents: write
-    uses: ./.github/workflows/release.yml
+      contents: read
+    uses: ./.github/workflows/netlify-deploy.yml
     with:
       ci_run_id: ${{ github.event.workflow_run.id }}
       commit_sha: ${{ github.event.workflow_run.head_sha }}
+      deploy_alias: ${{ needs.resolve-deployment.outputs.deploy_alias }}
+      deploy_label: ${{ needs.resolve-deployment.outputs.deploy_label }}
+      deploy_target: ${{ needs.resolve-deployment.outputs.deploy_target }}
+      environment_name: ${{ needs.resolve-deployment.outputs.environment_name }}
+    secrets: inherit

@@ -1,0 +1,135 @@
+name: Netlify deployment
+
+on:
+  workflow_call:
+    inputs:
+      ci_run_id:
+        description: GitHub Actions run that produced the verified artifact
+        required: true
+        type: number
+      commit_sha:
+        description: Revision represented by the artifact
+        required: true
+        type: string
+      deploy_alias:
+        description: Stable Netlify alias for non-production deployments
+        required: false
+        type: string
+        default: ""
+      deploy_label:
+        description: Human-readable deployment target
+        required: true
+        type: string
+      deploy_target:
+        description: Netlify target; production or alias
+        required: true
+        type: string
+      environment_name:
+        description: GitHub environment that owns deployment credentials
+        required: true
+        type: string
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  deploy:
+    name: Publish verified artifact
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: ${{ inputs.environment_name }}
+      url: ${{ steps.smoke.outputs.deploy_url }}
+
+    steps:
+      - name: Check out trusted deployment tooling
+        uses: actions/checkout@v7
+
+      - name: Validate Netlify configuration
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+        run: |
+          if [[ -z "$NETLIFY_AUTH_TOKEN" || -z "$NETLIFY_SITE_ID" ]]; then
+            echo "::error::NETLIFY_AUTH_TOKEN and NETLIFY_SITE_ID must be configured."
+            exit 1
+          fi
+
+      - name: Validate deployment inputs
+        env:
+          DEPLOY_ALIAS: ${{ inputs.deploy_alias }}
+          DEPLOY_TARGET: ${{ inputs.deploy_target }}
+        run: |
+          set -euo pipefail
+
+          if [[ "$DEPLOY_TARGET" == "production" && -z "$DEPLOY_ALIAS" ]]; then
+            exit 0
+          fi
+
+          if [[ "$DEPLOY_TARGET" != "alias" || \
+                ! "$DEPLOY_ALIAS" =~ ^(develop|staging|deploy-preview-[0-9]+)$ ]]; then
+            echo "::error::Invalid Netlify deployment target or alias."
+            exit 1
+          fi
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24.19.0
+
+      - name: Download verified production artifact
+        env:
+          ARTIFACT_NAME: frontend-build-${{ inputs.commit_sha }}
+          CI_RUN_ID: ${{ inputs.ci_run_id }}
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+        run: >-
+          gh run download "$CI_RUN_ID"
+          --repo "$REPOSITORY"
+          --name "$ARTIFACT_NAME"
+          --dir dist
+
+      - name: Validate downloaded artifact
+        run: |
+          set -euo pipefail
+
+          if [[ ! -f dist/index.html ]]; then
+            echo "::error::The verified artifact does not contain dist/index.html."
+            exit 1
+          fi
+
+          if find dist -type l -print -quit | grep -q .; then
+            echo "::error::Symbolic links are not allowed in deployment artifacts."
+            exit 1
+          fi
+
+      - name: Deploy application to Netlify
+        env:
+          DEPLOY_ALIAS: ${{ inputs.deploy_alias }}
+          DEPLOY_LABEL: ${{ inputs.deploy_label }}
+          DEPLOY_SHA: ${{ inputs.commit_sha }}
+          DEPLOY_TARGET: ${{ inputs.deploy_target }}
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+        run: |
+          set -euo pipefail
+
+          common_args=(
+            --dir=dist
+            --no-build
+            --site="$NETLIFY_SITE_ID"
+            --auth="$NETLIFY_AUTH_TOKEN"
+            --message="GitHub Actions ${DEPLOY_LABEL} ${DEPLOY_SHA}"
+            --json
+          )
+
+          if [[ "$DEPLOY_TARGET" == "production" ]]; then
+            npx --yes netlify-cli@27.0.1 deploy "${common_args[@]}" --prod > netlify-deploy.json
+          else
+            npx --yes netlify-cli@27.0.1 deploy "${common_args[@]}" --alias="$DEPLOY_ALIAS" > netlify-deploy.json
+          fi
+
+      - name: Smoke check deployed application
+        id: smoke
+        run: node .github/scripts/smoke_check.mjs netlify-deploy.json

@@ -1,4 +1,4 @@
-import { readFile } from "node:fs/promises";
+import { appendFile, readFile } from "node:fs/promises";
 
 const DEFAULT_MAX_WAIT_MS = 120_000;
 const DEFAULT_INTERVAL_MS = 5_000;
@@ -64,7 +64,7 @@ async function smokeCheck() {
     try {
       await probeApplication(deployUrl);
       console.log(`Smoke check passed: ${deployUrl}`);
-      return;
+      return deployUrl;
     } catch (error) {
       lastError = error;
       console.log(`Waiting for ${deployUrl}: ${error.message}`);
@@ -77,7 +77,13 @@ async function smokeCheck() {
   );
 }
 
-smokeCheck().catch((error) => {
-  console.error(`::error::${error.message}`);
-  process.exitCode = 1;
-});
+smokeCheck()
+  .then(async (deployUrl) => {
+    if (process.env.GITHUB_OUTPUT) {
+      await appendFile(process.env.GITHUB_OUTPUT, `deploy_url=${deployUrl}\n`);
+    }
+  })
+  .catch((error) => {
+    console.error(`::error::${error.message}`);
+    process.exitCode = 1;
+  });

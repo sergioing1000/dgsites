@@ -73,4 +73,10 @@ npm run build
 
 CI separa lint, pruebas y build para que cada error tenga una señal independiente. La cobertura global mínima es 65% para statements, branches, functions y lines; el reporte HTML se conserva como artefacto durante siete días.
 
-Los pushes aprobados a `staging` y `main` despliegan exclusivamente el artefacto generado por CI. Después de publicarlo, CD comprueba la respuesta HTTP, el tipo de contenido y la presencia del elemento raíz de la aplicación. El release de producción solo se crea cuando esa comprobación termina correctamente.
+Los pushes aprobados a `develop`, `staging` y `main` despliegan exclusivamente el artefacto generado por CI. Sus URLs estables son `develop--solar-sergioapp.netlify.app`, `staging--solar-sergioapp.netlify.app` y el dominio productivo, respectivamente.
+
+Un Pull Request interno desde una rama `feature/CR-FE-###-*` o `fix/CR-FE-###-*` hacia `develop` recibe un preview independiente en `deploy-preview-<PR>--solar-sergioapp.netlify.app`. Los forks, otras transiciones de ramas y ejecuciones con CI fallido no reciben credenciales ni despliegue. El contenido del PR no se ejecuta dentro del workflow privilegiado de CD.
+
+GitHub ejecuta los workflows encadenados con `workflow_run` desde la rama principal. Por ello, la capacidad de previews entra en vigor cuando este workflow llega a `main`; los despliegues confiables de `develop`, `staging` y `main` permanecen dentro de CI y se activan desde la rama correspondiente.
+
+Después de publicar cualquier ambiente, CD comprueba la respuesta HTTP, el tipo de contenido y la presencia del elemento raíz de la aplicación. El release de producción solo se crea cuando esa comprobación termina correctamente. Los ambientes de GitHub `development`, `staging`, `preview` y `production` deben exponer `NETLIFY_AUTH_TOKEN` y `NETLIFY_SITE_ID`, ya sea como secretos propios del ambiente o heredados del repositorio.
