@@ -1,113 +1,123 @@
-import React, { useState, useEffect, useRef } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
+
 import "./carouselselector.css";
 
-import SingleSite from "./singlesite1.jsx";
-import ExcelUploadTable from "./exceluploadtable1.jsx";
-import CurrentLocation from "./currentlocation1.jsx";
-import Docs from "./docs.jsx";
+const SingleSite = lazy(() => import("./singlesite1.jsx"));
+const ExcelUploadTable = lazy(() => import("./exceluploadtable1.jsx"));
+const CurrentLocation = lazy(() => import("./currentlocation1.jsx"));
+const Docs = lazy(() => import("./docs.jsx"));
 
-import locationIcon from "../assets/images/location.svg";
-import multilocationIcon from "../assets/images/multilocation.svg";
-import currentlocationIcon from "../assets/images/currentlocation2.svg";
-import documentationIcon from "../assets/images/documentation.svg";
-
-import RightArr from "../assets/images/rightarrow.svg";
-import LeftArr from "../assets/images/leftarrow.svg";
-
-import clickSoundFile from "../assets/sounds/click.mp3"; 
-
-const options = [
+const MODES = [
   {
     key: "single",
+    number: "01",
     label: "Single Site",
-    icon: locationIcon,
-    component: <SingleSite />,
+    shortLabel: "Point report",
+    description: "One coordinate and time range",
+    component: SingleSite,
   },
   {
     key: "multiple",
+    number: "02",
     label: "Multiple Site",
-    icon: multilocationIcon,
-    component: <ExcelUploadTable />,
+    shortLabel: "Station portfolio",
+    description: "Spreadsheet batch and export",
+    component: ExcelUploadTable,
   },
   {
     key: "current",
+    number: "03",
     label: "Current Location",
-    icon: currentlocationIcon,
-    component: <CurrentLocation />,
+    shortLabel: "Device position",
+    description: "Use browser coordinates",
+    component: CurrentLocation,
   },
   {
     key: "docs",
+    number: "04",
     label: "Documentation",
-    icon: documentationIcon,
-    component: <Docs />,
+    shortLabel: "Operating guide",
+    description: "Inputs, coverage and outputs",
+    component: Docs,
   },
 ];
 
-const CarouselSelector = () => {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [selectedOption, setSelectedOption] = useState(null); // Start with NO component shown
+function WorkspaceFallback() {
+  return (
+    <div className="workspace-fallback" role="status">
+      <span className="activity-dot" />
+      Loading workspace…
+    </div>
+  );
+}
 
-  const clickSoundRef = useRef(null);
+export default function CarouselSelector() {
+  const [activeMode, setActiveMode] = useState("single");
+  const [initialCoordinates, setInitialCoordinates] = useState(null);
+  const panelRef = useRef(null);
+  const active = MODES.find((mode) => mode.key === activeMode) ?? MODES[0];
+  const ActiveComponent = active.component;
 
   useEffect(() => {
-    clickSoundRef.current = new Audio(clickSoundFile);
-  }, []);
+    panelRef.current?.focus({ preventScroll: true });
+  }, [activeMode]);
 
-  const playClickSound = () => {
-    if (clickSoundRef.current) {
-      clickSoundRef.current.currentTime = 0;
-      clickSoundRef.current.play();
-    }
-  };
-
-  const handleNext = () => {
-    const newIndex = (currentIndex + 1) % options.length;
-    setCurrentIndex(newIndex);
-    setSelectedOption(options[newIndex].key);
-    playClickSound();
-  };
-
-  const handlePrev = () => {
-    const newIndex = (currentIndex - 1 + options.length) % options.length;
-    setCurrentIndex(newIndex);
-    setSelectedOption(options[newIndex].key);
-    playClickSound();
-  };
-
-  const handleSelect = (index, key) => {
-    setCurrentIndex(index);
-    setSelectedOption(key);
+  const selectMode = (mode) => {
+    setActiveMode(mode);
+    if (mode !== "single") setInitialCoordinates(null);
   };
 
   return (
-    <div className="carousel-container">
-      <div className="carousel">
-        <button className="arrow-button" onClick={handlePrev}>
-          <img src={LeftArr} alt="left arrow" width={40} />
-        </button>
-
-        {options.map((option, index) => (
-          <div
-            key={option.key}
-            className={`card ${index === currentIndex ? "active" : ""}`}
-            onClick={() => handleSelect(index, option.key)}
-          >
-            <img src={option.icon} alt={option.label} className="card-icon" />
-            <p className="card-label">{option.label}</p>
-          </div>
-        ))}
-
-        <button className="arrow-button" onClick={handleNext}>
-          <img src={RightArr} alt="right arrow" width={40} />
-        </button>
+    <section className="workspace-shell" id="workspace">
+      <div className="workspace-title">
+        <div>
+          <p className="eyebrow">Resource workstation</p>
+          <h1>Solar and wind reports for Colombian sites.</h1>
+        </div>
+        <p>
+          Choose a workflow to prepare location-based NASA POWER data for
+          analysis and export.
+        </p>
       </div>
 
-      <div className="selected-component">
-        {selectedOption &&
-          options.find((opt) => opt.key === selectedOption)?.component}
+      <nav aria-label="Consultation modes" className="mode-navigation">
+        {MODES.map((mode) => {
+          const isActive = mode.key === activeMode;
+          return (
+            <button
+              aria-current={isActive ? "page" : undefined}
+              className={isActive ? "is-active" : ""}
+              key={mode.key}
+              onClick={() => selectMode(mode.key)}
+              type="button"
+            >
+              <span className="mode-number">{mode.number}</span>
+              <span className="mode-copy">
+                <strong>{mode.label}</strong>
+                <small>{mode.description}</small>
+              </span>
+              <span aria-hidden="true" className="mode-arrow">→</span>
+            </button>
+          );
+        })}
+      </nav>
+
+      <div
+        aria-label={`${active.shortLabel} workspace`}
+        className="selected-workspace"
+        ref={panelRef}
+        tabIndex="-1"
+      >
+        <Suspense fallback={<WorkspaceFallback />}>
+          <ActiveComponent
+            initialCoordinates={initialCoordinates}
+            onUseLocation={(coordinates) => {
+              setInitialCoordinates(coordinates);
+              setActiveMode("single");
+            }}
+          />
+        </Suspense>
       </div>
-    </div>
+    </section>
   );
-};
-
-export default CarouselSelector;
+}
