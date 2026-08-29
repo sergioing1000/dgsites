@@ -21,6 +21,26 @@ function DialogHarness() {
   );
 }
 
+function UpdatingHandlerHarness() {
+  const [message, setMessage] = useState("Waiting");
+  const [closeMessage, setCloseMessage] = useState("First handler");
+
+  return (
+    <>
+      <p>{message}</p>
+      <button onClick={() => setCloseMessage("Latest handler")} type="button">
+        Update close handler
+      </button>
+      <Dialog
+        labelledBy="updating-dialog-title"
+        onClose={() => setMessage(closeMessage)}
+      >
+        <h2 id="updating-dialog-title">Updating handler</h2>
+      </Dialog>
+    </>
+  );
+}
+
 test("closes with Escape and returns focus to the opener", () => {
   render(<DialogHarness />);
   const opener = screen.getByRole("button", { name: "Open station map" });
@@ -33,4 +53,13 @@ test("closes with Escape and returns focus to the opener", () => {
 
   expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   expect(opener).toHaveFocus();
+});
+
+test("uses the latest close handler without re-registering the dialog effect", () => {
+  render(<UpdatingHandlerHarness />);
+
+  fireEvent.click(screen.getByRole("button", { name: "Update close handler" }));
+  fireEvent.keyDown(document, { key: "Escape" });
+
+  expect(screen.getByText("Latest handler")).toBeInTheDocument();
 });
