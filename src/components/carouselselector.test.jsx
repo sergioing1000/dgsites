@@ -28,7 +28,7 @@ vi.mock('./docs.jsx', () => ({
 }));
 
 beforeEach(() => {
-  global.Audio = vi.fn(function AudioMock() {
+  globalThis.Audio = vi.fn(function AudioMock() {
     this.currentTime = 0;
     this.play = vi.fn().mockResolvedValue(undefined);
   });

@@ -29,6 +29,11 @@ jobs:
       name: ${{ github.event.workflow_run.head_branch == 'main' && 'production' || 'staging' }}
 
     steps:
+      - name: Check out deployed revision
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
       - name: Validate Netlify configuration
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
@@ -72,10 +77,13 @@ jobs:
           )
 
           if [[ "$DEPLOY_BRANCH" == "main" ]]; then
-            npx --yes netlify-cli@27.0.1 deploy "${common_args[@]}" --prod
+            npx --yes netlify-cli@27.0.1 deploy "${common_args[@]}" --prod --json > netlify-deploy.json
           else
-            npx --yes netlify-cli@27.0.1 deploy "${common_args[@]}" --alias=staging
+            npx --yes netlify-cli@27.0.1 deploy "${common_args[@]}" --alias=staging-candidate --json > netlify-deploy.json
           fi
+
+      - name: Smoke check deployed application
+        run: node .github/scripts/smoke_check.mjs netlify-deploy.json
 
   release:
     name: Release deployed revision

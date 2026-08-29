@@ -60,7 +60,7 @@ const uploadFile = (container, name = "sites.xlsx") => {
 };
 
 beforeEach(() => {
-  global.FileReader = ImmediateFileReader;
+  globalThis.FileReader = ImmediateFileReader;
   XLSX.read.mockReturnValue({
     SheetNames: ["Sites"],
     Sheets: { Sites: {} },
