@@ -1,24 +1,27 @@
 :root {
-  color: #172e32;
-  background: #f2efe7;
+  color: #012146;
+  background: #eef4f8;
   font-family: Aptos, "Segoe UI", Helvetica, Arial, sans-serif;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
-  --paper: #f2efe7;
-  --paper-bright: #fbfaf5;
-  --ink: #172e32;
-  --ink-deep: #0d2226;
-  --muted: #617174;
-  --line: #cdd1c7;
-  --line-dark: #aeb6ab;
-  --solar: #efa932;
-  --solar-deep: #c87912;
-  --success: #246b55;
+  --paper: #eef4f8;
+  --paper-bright: #ffffff;
+  --ink: #244765;
+  --ink-deep: #012146;
+  --muted: #61778c;
+  --line: #d2dee7;
+  --line-dark: #9fb4c5;
+  --solar: #c55a11;
+  --solar-deep: #9c4108;
+  --primary: #2563c9;
+  --signal: #00b0f0;
+  --sky: #5b9bd5;
+  --success: #217346;
   --error: #a23b32;
   --error-soft: #f6e4df;
   --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
-  --shadow-dialog: 0 24px 80px rgb(10 32 36 / 28%);
+  --shadow-dialog: 0 24px 80px rgb(1 33 70 / 28%);
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -63,11 +66,11 @@ img {
 
 ::selection {
   color: var(--ink-deep);
-  background: #f7ca77;
+  background: #bfeaf8;
 }
 
 :focus-visible {
-  outline: 3px solid var(--solar);
+  outline: 3px solid var(--signal);
   outline-offset: 3px;
 }
 
@@ -139,14 +142,14 @@ img {
 }
 
 .button--primary {
-  color: var(--ink-deep);
-  background: var(--solar);
-  border-color: var(--solar);
+  color: #fff;
+  background: var(--primary);
+  border-color: var(--primary);
 }
 
 .button--primary:not(:disabled):hover {
-  background: #f6bc55;
-  border-color: #f6bc55;
+  background: #1d51aa;
+  border-color: #1d51aa;
 }
 
 .button--quiet {
@@ -217,7 +220,7 @@ img {
 .table-controls input:focus,
 .table-controls select:focus {
   border-color: var(--ink);
-  box-shadow: 0 0 0 3px rgb(239 169 50 / 24%);
+  box-shadow: 0 0 0 3px rgb(0 176 240 / 22%);
   outline: 0;
 }
 
@@ -269,15 +272,15 @@ img {
   width: 0.55rem;
   height: 0.55rem;
   flex: 0 0 auto;
-  background: var(--solar);
+  background: var(--signal);
   border-radius: 50%;
-  box-shadow: 0 0 0 0 rgb(239 169 50 / 35%);
+  box-shadow: 0 0 0 0 rgb(0 176 240 / 35%);
   animation: signal 1.7s infinite;
 }
 
 @keyframes signal {
   65% {
-    box-shadow: 0 0 0 0.55rem rgb(239 169 50 / 0%);
+    box-shadow: 0 0 0 0.55rem rgb(0 176 240 / 0%);
   }
 }
 

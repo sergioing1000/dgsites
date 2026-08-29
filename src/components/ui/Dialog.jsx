@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useEffectEvent, useRef } from "react";
 
 export default function Dialog({
   children,
@@ -8,16 +8,12 @@ export default function Dialog({
 }) {
   const closeButtonRef = useRef(null);
   const dialogRef = useRef(null);
-  const onCloseRef = useRef(onClose);
-
-  useEffect(() => {
-    onCloseRef.current = onClose;
-  }, [onClose]);
+  const closeDialog = useEffectEvent(onClose);
 
   useEffect(() => {
     const previouslyFocused = document.activeElement;
     const handleKeyDown = (event) => {
-      if (event.key === "Escape") onCloseRef.current();
+      if (event.key === "Escape") closeDialog();
       if (event.key !== "Tab") return;
 
       const focusableElements = dialogRef.current?.querySelectorAll(

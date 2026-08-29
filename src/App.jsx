@@ -13,7 +13,7 @@ function App() {
         <CarouselSelector />
       </main>
       <footer className="site-footer">
-        <p>DevGuards · Configuration &amp; maintenance project</p>
+        <p>DevGuards</p>
         <p>Daily meteorological data powered by NASA POWER.</p>
       </footer>
     </div>

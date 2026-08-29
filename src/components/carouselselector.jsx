@@ -55,14 +55,18 @@ export default function CarouselSelector() {
   const [activeMode, setActiveMode] = useState("single");
   const [initialCoordinates, setInitialCoordinates] = useState(null);
   const panelRef = useRef(null);
+  const shouldFocusPanel = useRef(false);
   const active = MODES.find((mode) => mode.key === activeMode) ?? MODES[0];
   const ActiveComponent = active.component;
 
   useEffect(() => {
+    if (!shouldFocusPanel.current) return;
     panelRef.current?.focus({ preventScroll: true });
+    shouldFocusPanel.current = false;
   }, [activeMode]);
 
   const selectMode = (mode) => {
+    shouldFocusPanel.current = true;
     setActiveMode(mode);
     if (mode !== "single") setInitialCoordinates(null);
   };
@@ -72,7 +76,7 @@ export default function CarouselSelector() {
       <div className="workspace-title">
         <div>
           <p className="eyebrow">Resource workstation</p>
-          <h1>Solar and wind reports for Colombian sites.</h1>
+          <h1>Solar and wind resource reports.</h1>
         </div>
         <p>
           Choose a workflow to prepare location-based NASA POWER data for
@@ -112,6 +116,7 @@ export default function CarouselSelector() {
           <ActiveComponent
             initialCoordinates={initialCoordinates}
             onUseLocation={(coordinates) => {
+              shouldFocusPanel.current = true;
               setInitialCoordinates(coordinates);
               setActiveMode("single");
             }}

@@ -9,7 +9,8 @@
   z-index: 2000;
   padding: 0.65rem 0.9rem;
   color: var(--ink-deep);
-  background: var(--solar);
+  color: #fff;
+  background: var(--primary);
   transform: translateY(-180%);
 }
 
@@ -41,7 +42,7 @@
   place-items: center;
   padding: 1rem;
   overflow-y: auto;
-  background: rgb(7 25 29 / 78%);
+  background: rgb(1 33 70 / 78%);
   animation: backdrop-in 180ms ease both;
 }
 

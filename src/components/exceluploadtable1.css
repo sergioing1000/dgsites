@@ -26,7 +26,7 @@
 }
 
 .upload-control input[type="file"]:focus-visible + label {
-  outline: 3px solid var(--solar);
+  outline: 3px solid var(--signal);
   outline-offset: 3px;
 }
 
@@ -171,7 +171,7 @@
 
 .sites-table thead th {
   color: var(--muted);
-  background: #eeeee8;
+  background: #edf4f8;
   font-size: 0.65rem;
   font-weight: 800;
   letter-spacing: 0.08em;
@@ -198,7 +198,7 @@
 }
 
 .sites-table tbody tr:hover {
-  background: #f5f1e7;
+  background: #f2f8fc;
 }
 
 .station-link {
@@ -263,7 +263,7 @@
 }
 
 .batch-progress__copy > span {
-  color: var(--solar);
+  color: var(--signal);
   font-variant-numeric: tabular-nums;
   font-weight: 800;
 }
@@ -289,12 +289,12 @@
 }
 
 .progress-track::-webkit-progress-value {
-  background: var(--solar);
+  background: var(--signal);
   transition: width 400ms var(--ease-out);
 }
 
 .progress-track::-moz-progress-bar {
-  background: var(--solar);
+  background: var(--signal);
 }
 
 @media (max-width: 800px) {
