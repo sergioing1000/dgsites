@@ -1,37 +1,38 @@
-import React, { useState } from "react";
+import nasaPowerLogo from "../assets/images/nasapower.jpeg";
+
 import "./header1.css";
-import nasalogo from '../assets/images/nasapower.jpeg'
 
-const Header = () => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
-
+export default function Header() {
   return (
-    <header className="header">
-      <div className="brand">
-        <a target="_blank" rel="noreferrer" href="https://power.larc.nasa.gov/">
-          <img src={nasalogo} alt="nasa power logo" width={100} />
-        </a>
+    <header className="site-header">
+      <a
+        aria-label="Solar App by DevGuards"
+        className="brand-lockup"
+        href="#workspace"
+      >
+        <img alt="NASA POWER logo" src={nasaPowerLogo} />
+        <span>
+          <strong>Solar / Wind</strong>
+          <small>DevGuards field console</small>
+        </span>
+      </a>
 
-        <a href="/" className="brand-link">
-          Solar APP by DevGuards
-        </a>
+      <div className="source-status">
+        <span className="source-status__signal" aria-hidden="true" />
+        <span>
+          <small>Data source</small>
+          <strong>NASA POWER</strong>
+        </span>
       </div>
 
-      <nav className={`nav-links ${isMenuOpen ? "active" : ""}`}>
-        <a href="/">Home</a>
-        <a href="/about">About</a>
-        <a href="/dashboard">Dashboard</a>
-        <a href="/contact">Contact</a>
-      </nav>
-
-      <button className="menu-toggle" onClick={toggleMenu}>
-        <span className="hamburger"></span>
-        <span className="hamburger"></span>
-        <span className="hamburger"></span>
-      </button>
+      <a
+        className="header-link"
+        href="https://power.larc.nasa.gov/"
+        rel="noreferrer"
+        target="_blank"
+      >
+        Source portal <span aria-hidden="true">↗</span>
+      </a>
     </header>
   );
-};
-
-export default Header;
+}

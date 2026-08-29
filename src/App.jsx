@@ -1,14 +1,22 @@
 import Header1 from "./components/header1.jsx";
 import CarouselSelector from "./components/carouselselector.jsx";
 import "./App.css";
-import "leaflet/dist/leaflet.css";
 
 function App() {
   return (
-    <>
+    <div className="app-shell">
+      <a className="skip-link" href="#workspace">
+        Skip to workspace
+      </a>
       <Header1 />
-      <CarouselSelector />
-    </>
+      <main>
+        <CarouselSelector />
+      </main>
+      <footer className="site-footer">
+        <p>DevGuards</p>
+        <p>Daily meteorological data powered by NASA POWER.</p>
+      </footer>
+    </div>
   );
 }
 

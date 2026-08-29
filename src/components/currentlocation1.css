@@ -1,60 +1,157 @@
-:root {
-    --color-burnt-orange: #C55A11;
-    --color-strong-blue: #2563C9;
-    --color-light-blue: #00B0F0;
-    --color-deep-navy: #012146;
-    --color-medium-blue: #5B9BD5;
-    --color-gray: #BEC2C7;
+.location-workspace {
+  display: grid;
+  grid-template-columns: minmax(18rem, 0.78fr) minmax(20rem, 1fr);
+  gap: clamp(2rem, 8vw, 8rem);
+  align-items: center;
+  padding: clamp(2rem, 6vw, 5rem);
+}
+
+.location-copy .button {
+  margin-top: 1.8rem;
+}
+
+.privacy-note {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.8rem;
+  align-items: start;
+  margin-top: 1.6rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--line);
+}
+
+.privacy-note > span {
+  color: var(--solar-deep);
+  font-size: 1.1rem;
+}
+
+.privacy-note p {
+  display: grid;
+  gap: 0.15rem;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.76rem;
+  line-height: 1.45;
+}
+
+.privacy-note strong {
+  color: var(--ink-deep);
+}
+
+.coordinate-instrument {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 27rem;
+  overflow: hidden;
+  color: #ecf2ee;
+  background: var(--ink-deep);
+}
+
+.coordinate-instrument::before,
+.coordinate-instrument::after,
+.instrument-orbit {
+  content: "";
+  position: absolute;
+  border: 1px solid rgb(255 255 255 / 11%);
+  border-radius: 50%;
+}
+
+.coordinate-instrument::before {
+  width: 26rem;
+  height: 26rem;
+}
+
+.coordinate-instrument::after {
+  width: 17rem;
+  height: 17rem;
+}
+
+.instrument-orbit {
+  width: 9rem;
+  height: 9rem;
+}
+
+.instrument-orbit span {
+  position: absolute;
+  top: -0.4rem;
+  left: calc(50% - 0.4rem);
+  width: 0.8rem;
+  height: 0.8rem;
+  background: var(--solar);
+  border-radius: 50%;
+  box-shadow: 0 0 1.5rem rgb(239 169 50 / 70%);
+}
+
+.instrument-placeholder,
+.location-result {
+  position: relative;
+  z-index: 1;
+  max-width: 19rem;
+  padding: 1.3rem;
+  text-align: center;
+}
+
+.instrument-placeholder {
+  display: grid;
+  gap: 0.45rem;
+  color: #90a3a1;
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+
+.instrument-placeholder strong {
+  color: #fff;
+  font-family: var(--serif);
+  font-size: 1.3rem;
+  font-weight: 600;
+}
+
+.location-result > p {
+  margin: 0 0 1rem;
+  color: var(--solar);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.location-result dl {
+  margin: 0 0 1.3rem;
+}
+
+.location-result dl > div {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: 1rem;
+  padding: 0.65rem 0;
+  border-bottom: 1px solid rgb(255 255 255 / 14%);
+  text-align: left;
+}
+
+.location-result dt {
+  color: #91a29f;
+  font-size: 0.7rem;
+}
+
+.location-result dd {
+  margin: 0;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+  font-weight: 750;
+}
+
+.location-workspace > .status-message {
+  grid-column: 1 / -1;
+  margin-top: 0;
+}
+
+@media (max-width: 800px) {
+  .location-workspace {
+    grid-template-columns: 1fr;
   }
-  
-  .currentlocation-container {
-    background-color: var(--color-light-blue);
-    padding: 20px;
-    border-radius: 10px;
-    color: white;
-    transition: background-color 0.3s ease;
+
+  .coordinate-instrument {
+    min-height: 22rem;
   }
-  
-  .currentlocation-title {
-    margin-bottom: 10px;
-    color: white;
-  }
-  
-  .currentlocation-description {
-    margin-bottom: 15px;
-    font-size: 14px;
-  }
-  
-  .currentlocation-button {
-    padding: 10px 20px;
-    background-color: var(--color-deep-navy);
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-weight: bold;
-    transition: background-color 0.3s ease, box-shadow 0.3s ease;
-  }
-  
-  .currentlocation-button:hover {
-    background-color: var(--color-strong-blue);
-    box-shadow: 0 0 8px var(--color-strong-blue);
-  }
-  
-  .location-result {
-    margin-top: 15px;
-    background-color: white;
-    color: var(--color-deep-navy);
-    padding: 10px;
-    border-radius: 5px;
-    font-size: 14px;
-  }
-  
-  .location-error {
-    margin-top: 10px;
-    color: #ffdddd;
-    background-color: #660000;
-    padding: 10px;
-    border-radius: 5px;
-  }
-  
+}
